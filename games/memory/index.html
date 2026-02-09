@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PixelHub - Memory Pro</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <header>
+            <a href="../../index.html" class="back-link">← Retour au Hub</a>
+            <h1>Memory <span>Expert</span></h1>
+            
+            <div class="controls">
+                <select id="difficulty" onchange="initGame()">
+                    <option value="4">Débutant (4x4)</option>
+                    <option value="6">Intermédiaire (6x6)</option>
+                    <option value="8">Expert (8x8)</option>
+                </select>
+                <button id="mode-btn" onclick="toggleMode()">Mode: VS Ordinateur</button>
+            </div>
+        </header>
+
+        <div class="scoreboard">
+            <div id="box-p1" class="score-box p1 active">J1: <span id="s1">0</span></div>
+            <div id="box-p2" class="score-box p2">IA: <span id="s2">0</span></div>
+        </div>
+
+        <div id="grid" class="memory-grid"></div>
+
+        <button class="reset-btn" onclick="initGame()">Réinitialiser</button>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

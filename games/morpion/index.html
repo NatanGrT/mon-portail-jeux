@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>PixelHub - Morpion</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <header>
+            <a href="../../index.html" class="back-link">← Retour</a>
+            <h1>Morpion</h1>
+            <button id="mode-btn" onclick="toggleMode()">Mode: VS Ordinateur</button>
+        </header>
+
+        <div class="scoreboard">
+            <div class="score-box p1">JOUEUR 1 <span id="s1">0</span></div>
+            <div class="score-box p2"><span id="p2-name">IA</span> <span id="s2">0</span></div>
+        </div>
+
+        <div id="grid" class="grid">
+            <div class="cell" onclick="handleMove(0)"></div>
+            <div class="cell" onclick="handleMove(1)"></div>
+            <div class="cell" onclick="handleMove(2)"></div>
+            <div class="cell" onclick="handleMove(3)"></div>
+            <div class="cell" onclick="handleMove(4)"></div>
+            <div class="cell" onclick="handleMove(5)"></div>
+            <div class="cell" onclick="handleMove(6)"></div>
+            <div class="cell" onclick="handleMove(7)"></div>
+            <div class="cell" onclick="handleMove(8)"></div>
+        </div>
+
+        <button class="reset-btn" onclick="resetGame()">Rejouer</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

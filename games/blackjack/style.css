@@ -1,0 +1,90 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Poppins:wght@400;600&display=swap');
+
+body {
+    background-color: #020617;
+    color: white;
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    overflow: hidden; /* Empêche le scroll inutile */
+}
+
+.game-container { width: 95%; max-width: 900px; padding: 15px; text-align: center; }
+
+h1 { font-family: 'Orbitron'; font-size: 1.4rem; margin: 10px 0; }
+h1 span { color: #fbbf24; }
+
+.stats-panel {
+    display: flex;
+    justify-content: space-around;
+    background: #111827;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid #1e293b;
+    margin-bottom: 15px;
+    font-family: 'Orbitron';
+    font-size: 0.8rem;
+}
+
+.status-msg { color: #fbbf24; font-weight: bold; }
+
+/* TABLE */
+.blackjack-table {
+    background: #064e3b;
+    border: 8px solid #451a03;
+    border-radius: 200px 200px 30px 30px;
+    padding: 30px;
+    position: relative;
+    box-shadow: inset 0 0 80px rgba(0,0,0,0.8);
+    height: 380px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.hand { display: flex; justify-content: center; gap: 10px; min-height: 100px; }
+
+/* CARTES */
+.card {
+    width: 70px; height: 100px; background: white; color: black;
+    border-radius: 6px; display: flex; align-items: center; justify-content: center;
+    font-weight: bold; font-size: 1.1rem; box-shadow: 3px 3px 8px rgba(0,0,0,0.5);
+    border: 1px solid #ddd;
+}
+.card.red { color: #e11d48; }
+
+.score-badge {
+    background: #fbbf24; color: black; padding: 4px 10px;
+    border-radius: 10px; font-family: 'Orbitron'; font-weight: bold;
+    display: inline-block; margin-top: 5px;
+}
+
+.logo-b { font-family: 'Orbitron'; font-size: 3rem; opacity: 0.1; position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%); }
+.rules { font-size: 0.7rem; color: #fbbf24; opacity: 0.5; letter-spacing: 1px; }
+
+/* INTERFACE BASSE */
+.interface {
+    background: #0f172a;
+    padding: 15px 30px;
+    border-radius: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+    margin-top: 20px;
+    border: 1px solid #1e293b;
+}
+
+.bet-area { display: flex; align-items: center; gap: 10px; font-family: 'Orbitron'; font-size: 0.8rem; }
+.bet-area input { background: #020617; border: 1px solid #38bdf8; color: white; padding: 5px; width: 60px; text-align: center; }
+
+button {
+    font-family: 'Orbitron'; padding: 10px 20px; border-radius: 20px;
+    border: none; cursor: pointer; font-weight: bold; transition: 0.2s;
+}
+
+.btn-main { background: #fbbf24; color: black; }
+.btn-action { background: #38bdf8; color: black; }
+button:disabled { background: #334155; color: #64748b; cursor: not-allowed; }
+button:hover:not(:disabled) { transform: scale(1.05); }

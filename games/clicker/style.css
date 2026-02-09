@@ -1,0 +1,31 @@
+body {
+    background-color: #0f172a;
+    color: white;
+    font-family: sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.game-container { text-align: center; }
+
+#click-me {
+    padding: 20px 40px;
+    font-size: 2rem;
+    background: #38bdf8;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+
+#click-me:active { transform: scale(0.95); }
+
+.back-link {
+    display: block;
+    margin-bottom: 20px;
+    color: #38bdf8;
+    text-decoration: none;
+}

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Démineur Pro - PixelHub</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <a href="../../index.html" class="back-link">← Retour au Hub</a>
+        <h1>Démineur</h1>
+        <div class="controls">
+            <select id="difficulty">
+                <option value="10">Petit (10x10)</option>
+                <option value="25">Moyen (25x25)</option>
+                <option value="50">Grand (50x50)</option>
+                <option value="80">Géant (80x80)</option>
+            </select>
+            <button id="restart">Lancer</button>
+        </div>
+        <div class="board-wrapper">
+            <div id="board"></div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

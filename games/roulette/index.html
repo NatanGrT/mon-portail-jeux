@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Casino Roulette - PixelHub</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <header>
+            <a href="../../index.html" class="back-link">← Retour</a>
+            <h1>Casino <span>Roulette</span></h1>
+        </header>
+
+        <div class="paytable-horizontal">
+            <div class="pay-item"><span>Plein</span><b>35:1</b></div>
+            <div class="pay-item"><span>Douzaine</span><b>2:1</b></div>
+            <div class="pay-item"><span>Colonne</span><b>2:1</b></div>
+            <div class="pay-item"><span>Rouge/Noir</span><b>1:1</b></div>
+            <div class="pay-item"><span>Pair/Impair</span><b>1:1</b></div>
+            <div class="pay-item"><span>Manque/Passe</span><b>1:1</b></div>
+        </div>
+
+        <div class="stats-panel">
+            <div class="stat-box">🔴 <span id="stat-red">50</span>%</div>
+            <div class="stat-box">⚫ <span id="stat-black">50</span>%</div>
+            <div class="stat-box chaud">🔥 <span id="hot-numbers">-</span></div>
+            <div class="stat-box froid">❄️ <span id="cold-numbers">-</span></div>
+            <div class="stat-box win-total">DERNIER GAIN : <span id="last-win">0</span></div>
+        </div>
+
+        <div id="history" class="history-container"></div>
+
+        <div class="roulette-layout">
+            <div class="wheel-section">
+                <div class="indicator">▼</div>
+                <canvas id="wheel" width="350" height="350"></canvas>
+            </div>
+
+            <div class="table-section">
+                <div class="numbers-grid" id="numbers-grid">
+                    <div class="num-item green" onclick="addBet('num-0', 36)">0</div>
+                    </div>
+
+                <div class="dozens-row">
+                    <button class="bet-btn" onclick="addBet('p12', 3)">P12</button>
+                    <button class="bet-btn" onclick="addBet('m12', 3)">M12</button>
+                    <button class="bet-btn" onclick="addBet('d12', 3)">D12</button>
+                </div>
+
+                <div class="outside-row">
+                    <button class="bet-btn" onclick="addBet('manque', 2)">1-18</button>
+                    <button class="bet-btn" onclick="addBet('pair', 2)">Pair</button>
+                    <button class="bet-btn red" onclick="addBet('red', 2)">Rouge</button>
+                    <button class="bet-btn black" onclick="addBet('black', 2)">Noir</button>
+                    <button class="bet-btn" onclick="addBet('impair', 2)">Impair</button>
+                    <button class="bet-btn" onclick="addBet('passe', 2)">19-36</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls-bar">
+            <div class="balance-info">💰 <span id="balance">1000</span></div>
+            <input type="number" id="bet-amount" value="10" min="1">
+            <button class="spin-btn" onclick="startSpin()">Lancer</button>
+            <button class="clear-btn" onclick="clearBets()">Effacer</button>
+        </div>
+        <div id="active-bets-display">Mises: 0 jetons</div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

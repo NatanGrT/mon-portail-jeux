@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Puissance 4 - Barrière Edition</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Poppins:wght@300;600&display=swap');
+
+        body {
+            background-color: #050a15;
+            color: white;
+            font-family: 'Poppins', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        header { margin-top: 20px; text-align: center; }
+        h1 { font-family: 'Orbitron'; color: white; margin-bottom: 5px; }
+        .back-link { color: #38bdf8; text-decoration: none; font-size: 0.9rem; }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+            background: #111827;
+            padding: 10px 30px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 1px solid #1e293b;
+            font-family: 'Orbitron';
+        }
+
+        #game-board {
+            background-color: #1e3a8a; /* Bleu profond Barrière */
+            padding: 15px;
+            border-radius: 15px;
+            display: grid;
+            grid-template-columns: repeat(7, 60px);
+            grid-template-rows: repeat(6, 60px);
+            gap: 10px;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.5);
+            border: 4px solid #1e40af;
+        }
+
+        .cell {
+            background-color: #050a15;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            cursor: pointer;
+            transition: 0.3s;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        .cell:hover { background-color: #1e293b; }
+        .cell.player1 { background-color: #ef4444; box-shadow: 0 0 15px #ef4444; } /* Rouge */
+        .cell.player2 { background-color: #fbbf24; box-shadow: 0 0 15px #fbbf24; } /* Jaune */
+
+        .controls { margin-top: 30px; }
+        button {
+            background: #38bdf8;
+            color: #050a15;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 20px;
+            font-family: 'Orbitron';
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        button:hover { transform: scale(1.05); background: white; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="../../index.html" class="back-link">← Retour</a>
+        <h1>Puissance 4</h1>
+    </header>
+
+    <div class="stats">
+        <div>JOUEUR (Rouge): <span id="score1">0</span></div>
+        <div>IA (Jaune): <span id="score2">0</span></div>
+    </div>
+
+    <div id="game-board"></div>
+
+    <div class="controls">
+        <button onclick="resetGame()">Réinitialiser</button>
+    </div>
+
+    <script>
+        const ROWS = 6;
+        const COLS = 7;
+        let board = [];
+        let currentPlayer = 1; // 1: Humain, 2: IA
+        const boardElement = document.getElementById('game-board');
+
+        function createBoard() {
+            boardElement.innerHTML = '';
+            board = Array(ROWS).fill().map(() => Array(COLS).fill(0));
+            
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('cell');
+                    cell.dataset.row = r;
+                    cell.dataset.col = c;
+                    cell.onclick = () => handleMove(c);
+                    boardElement.appendChild(cell);
+                }
+            }
+        }
+
+        function handleMove(col) {
+            // Trouver la ligne la plus basse vide
+            for (let r = ROWS - 1; r >= 0; r--) {
+                if (board[r][col] === 0) {
+                    board[r][col] = currentPlayer;
+                    updateBoard();
+                    if (checkWin(r, col)) {
+                        setTimeout(() => alert(currentPlayer === 1 ? "Vous avez gagné !" : "L'IA a gagné !"), 100);
+                        return;
+                    }
+                    currentPlayer = (currentPlayer === 1) ? 2 : 1;
+                    if (currentPlayer === 2) setTimeout(iaMove, 500);
+                    return;
+                }
+            }
+        }
+
+        function iaMove() {
+            let availableCols = [];
+            for(let c=0; c<COLS; c++) if(board[0][c] === 0) availableCols.push(c);
+            if(availableCols.length > 0) {
+                const randomCol = availableCols[Math.floor(Math.random() * availableCols.length)];
+                handleMove(randomCol);
+            }
+        }
+
+        function updateBoard() {
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach(cell => {
+                const r = cell.dataset.row;
+                const c = cell.dataset.col;
+                cell.className = 'cell';
+                if (board[r][c] === 1) cell.classList.add('player1');
+                if (board[r][c] === 2) cell.classList.add('player2');
+            });
+        }
+
+        function checkWin(r, c) {
+            const val = board[r][c];
+            // Logique simplifiée : Verticale, Horizontale, Diagonale
+            return (checkDir(r, c, 1, 0) || checkDir(r, c, 0, 1) || checkDir(r, c, 1, 1) || checkDir(r, c, 1, -1));
+        }
+
+        function checkDir(r, c, dr, dc) {
+            let count = 1;
+            const val = board[r][c];
+            // Vers l'avant
+            for (let i = 1; i < 4; i++) {
+                let nr = r + dr * i, nc = c + dc * i;
+                if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS && board[nr][nc] === val) count++;
+                else break;
+            }
+            // Vers l'arrière
+            for (let i = 1; i < 4; i++) {
+                let nr = r - dr * i, nc = c - dc * i;
+                if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS && board[nr][nc] === val) count++;
+                else break;
+            }
+            return count >= 4;
+        }
+
+        function resetGame() {
+            currentPlayer = 1;
+            createBoard();
+        }
+
+        createBoard();
+    </script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>PFC - PixelHub</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <a href="../../index.html" class="back-link">← Retour au Hub</a>
+        <h1>Pierre Feuille Ciseaux</h1>
+        
+        <div class="score-board">
+            <div class="score">Joueur: <span id="player-score">0</span></div>
+            <div class="score">Ordi: <span id="computer-score">0</span></div>
+        </div>
+
+        <div class="display">
+            <div class="choice-view">Tu as choisi : <span id="player-choice">-</span></div>
+            <div class="choice-view">L'ordi a choisi : <span id="computer-choice">-</span></div>
+            <h2 id="result-text">Fais ton choix !</h2>
+        </div>
+
+        <div class="buttons">
+            <button class="choice-btn" data-choice="pierre">🪨 Pierre</button>
+            <button class="choice-btn" data-choice="feuille">📄 Feuille</button>
+            <button class="choice-btn" data-choice="ciseaux">✂️ Ciseaux</button>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
