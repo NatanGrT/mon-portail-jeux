@@ -1,16 +1,16 @@
-// --- CONFIGURATION ET ÉTAT DU JEU ---
-let state = {
+// --- CONFIGURATION ET ÉTAT INITIAL DU JEU ---
+const DEFAULT_STATE = {
     score: 0,
     baseObjective: 1000,
     difficultyMultiplier: 1.5,
     
-    // Prestige Upgrades
+    // Niveaux de la boutique de prestige
     prestigeLevel: 0,
     gems: 0,
     clickUpgradeLevel: 0,
     discountUpgradeLevel: 0,
-    hasEventsUnlocked: false,  // Débloque Anomalies et Comètes
-    hasRiftsUnlocked: false,   // Débloque les Failles à Gemmes
+    hasEventsUnlocked: false,
+    hasRiftsUnlocked: false,
 
     miners: [
         { id: 1, baseCost: 15, bps: 1, count: 0, cost: 15 },
@@ -20,9 +20,35 @@ let state = {
     ]
 };
 
+// Chargement initial
+let state = loadGame();
 let eventActiveMultiplier = 1;
 
-// --- FONCTIONS DE CALCUL ---
+// --- MACHINE À SAUVEGARDE (LOCALSTORAGE) ---
+function saveGame() {
+    localStorage.setItem('clicker_pro_save', JSON.stringify(state));
+}
+
+function loadGame() {
+    const saved = localStorage.getItem('clicker_pro_save');
+    if (saved) {
+        try {
+            const parsed = JSON.parse(saved);
+            // Sécurité anti-crash si des clés manquent
+            return { ...DEFAULT_STATE, ...parsed, miners: parsed.miners || DEFAULT_STATE.miners };
+        } catch (e) {
+            console.error("Erreur de lecture de la sauvegarde", e);
+            return JSON.parse(JSON.stringify(DEFAULT_STATE));
+        }
+    }
+    return JSON.parse(JSON.stringify(DEFAULT_STATE));
+}
+
+// Sauvegarde automatique en arrière-plan (Toutes les 10 secondes)
+setInterval(saveGame, 10000);
+
+
+// --- FORMULES MATHÉMATIQUES DU JEU ---
 function getObjectiveNeeded() {
     return Math.floor(state.baseObjective * Math.pow(state.difficultyMultiplier, state.prestigeLevel));
 }
@@ -30,45 +56,41 @@ function getClickPower() {
     return (1 + state.clickUpgradeLevel) * (1 + state.prestigeLevel * 0.15);
 }
 function getGlobalMultiplier() {
-    return (1 + state.prestigeLevel * 0.15);
+    return (1 + state.prestigeLevel * 0.15); // +15% passif par niveau de prestige
 }
 function getDiscount() {
-    return Math.pow(0.90, state.discountUpgradeLevel);
+    return Math.pow(0.90, state.discountUpgradeLevel); // -10% cumulable
 }
 function calculateTotalBPS() {
     let totalBase = state.miners.reduce((sum, m) => sum + (m.count * m.bps), 0);
     return totalBase * getGlobalMultiplier() * eventActiveMultiplier;
 }
 
-// --- GESTION DES 3 TYPES D'ÉVÉNEMENTS (ANTI-AFK COOPÉRATEUR) ---
+
+// --- GESTION DES 3 ÉVÉNEMENTS ANTI-AFK ---
 function spawnRandomEvent() {
-    // Si aucun événement n'est acheté, on arrête tout de suite
     if (!state.hasEventsUnlocked) return;
 
-    // Choix du type d'événement disponible
     let pool = ['anomaly', 'comet'];
-    if (state.hasRiftsUnlocked) {
-        pool.push('rift'); // Ajoute la faille de gemme si achetée
-    }
+    if (state.hasRiftsUnlocked) pool.push('rift');
 
     let chosenType = pool[Math.floor(Math.random() * pool.length)];
-
     const container = document.getElementById('event-container');
+    if (!container) return;
+    
     const eventEl = document.createElement('div');
     eventEl.className = `random-anomaly event-${chosenType}`;
     
-    // Position sur l'écran
+    // Position aléatoire sur les zones cliquables
     const x = Math.random() * (window.innerWidth - 180);
     const y = Math.random() * (window.innerHeight - 100);
     eventEl.style.left = `${x}px`;
     eventEl.style.top = `${y}px`;
 
-    // Personnalisation visuelle et textuelle selon le type
     if (chosenType === 'anomaly') eventEl.innerText = "⚡ ANOMALIE (x3)";
     if (chosenType === 'comet') eventEl.innerText = "☄️ COMÈTE (+$$$)";
     if (chosenType === 'rift') eventEl.innerText = "🔮 FAILLE TEMPORELLE";
 
-    // Disparition automatique au bout de 5 secondes si pas cliqué
     let timeout = setTimeout(() => { eventEl.remove(); }, 5000);
 
     eventEl.addEventListener('click', (e) => {
@@ -84,10 +106,9 @@ function executeEventEffect(type, clickX, clickY) {
     const alertBox = document.getElementById('active-event-alert');
 
     if (type === 'anomaly') {
-        // Boost temporel x3 pendant 12 secondes
         eventActiveMultiplier = 3;
-        alertBox.innerText = "⚡ REVENUE BOOSTÉ (x3) PAR L'ANOMALIE !";
-        alertBox.className = "event-alert-anomaly"; // change la couleur de l'alerte
+        alertBox.innerText = "⚡ EXPANSION ACTIVE : PRODUCTION GLOBAL x3 !";
+        alertBox.className = "event-alert-anomaly";
         
         setTimeout(() => {
             eventActiveMultiplier = 1;
@@ -96,27 +117,26 @@ function executeEventEffect(type, clickX, clickY) {
         }, 12000);
     } 
     else if (type === 'comet') {
-        // Gain immédiat massif basé sur le BPS actuel (équivalent à 60s de production, min 200 points)
         let currentBps = calculateTotalBPS();
-        let reward = Math.max(200, currentBps * 60);
+        let reward = Math.max(200, currentBps * 60); // Donne 60s de production d'un coup
         state.score += reward;
         createFloatingText(clickX, clickY, `+${Math.floor(reward).toLocaleString()} ☄️`, '#f59e0b');
     } 
     else if (type === 'rift') {
-        // Récompense : +1 Gemme instantanée directement !
         state.gems += 1;
         createFloatingText(clickX, clickY, `+1 💎`, '#a855f7');
+        saveGame();
     }
     updateUI();
 }
 
-// Lancement de la roulette d'événement toutes les 20 secondes
+// Lancement de la boucle des popups (Toutes les 20 secondes)
 setInterval(() => {
-    if (Math.random() < 0.5) spawnRandomEvent(); // 50% de chance d'apparaître
+    if (Math.random() < 0.5) spawnRandomEvent();
 }, 20000);
 
 
-// --- MISE À JOUR DE L'INTERFACE (UI) ---
+// --- SYNCHRONISATION INTERFACE (UI) ---
 function updateUI() {
     const objective = getObjectiveNeeded();
     
@@ -127,7 +147,7 @@ function updateUI() {
     document.getElementById('prestige-gems').innerText = state.gems;
     document.getElementById('req-score').innerText = objective.toLocaleString();
 
-    // Auto-Mineurs
+    // Actualisation des Auto-Mineurs
     state.miners.forEach(m => {
         m.cost = Math.floor(m.baseCost * Math.pow(1.15, m.count) * getDiscount());
         document.getElementById(`cost-${m.id}`).innerText = m.cost.toLocaleString();
@@ -135,7 +155,7 @@ function updateUI() {
         document.getElementById(`buy-${m.id}`).disabled = state.score < m.cost;
     });
 
-    // Bouton Prestige principal (Dépense de points)
+    // Gestion de l'allumage du bouton Reload
     const prestigeBtn = document.getElementById('prestige-btn');
     if (state.score >= objective) {
         prestigeBtn.disabled = false;
@@ -145,21 +165,18 @@ function updateUI() {
         prestigeBtn.classList.remove('ready');
     }
 
-    // Gestion des coûts fixes de la boutique Prestige
+    // Actualisation dynamique de la boutique de Prestige
     const clickUpgradeCost = Math.floor(1 * Math.pow(2, state.clickUpgradeLevel));
     const discountUpgradeCost = Math.floor(2 * Math.pow(2.5, state.discountUpgradeLevel));
     
-    // Bouton Clic
     const clickBtn = document.getElementById('upgrade-click');
     clickBtn.innerText = `Surcharge Clic (Prix: ${clickUpgradeCost} 💎)`;
     clickBtn.disabled = state.gems < clickUpgradeCost;
 
-    // Bouton Réduction Coûts
     const discBtn = document.getElementById('upgrade-discount');
     discBtn.innerText = `Optimisation (Prix: ${discountUpgradeCost} 💎)`;
     discBtn.disabled = state.gems < discountUpgradeCost;
 
-    // Bouton Débloquer Événements (Achat unique de 2 gemmes)
     const eventBtn = document.getElementById('upgrade-events');
     if(state.hasEventsUnlocked) {
         eventBtn.innerText = "Détecteur Activé ✔";
@@ -169,7 +186,6 @@ function updateUI() {
         eventBtn.disabled = state.gems < 2;
     }
 
-    // Bouton Débloquer Faille de Gemmes (Achat unique de 5 gemmes - nécessite Détecteur)
     const riftBtn = document.getElementById('upgrade-rift');
     if(state.hasRiftsUnlocked) {
         riftBtn.innerText = "Radar de Failles Activé ✔";
@@ -183,8 +199,10 @@ function updateUI() {
     }
 }
 
-// --- INTERACTIONS EN JEU ---
 
+// --- GESTION DES SECTIONS INTERACTIVES ---
+
+// Clic Central
 document.getElementById('click-me').addEventListener('click', (e) => {
     let earned = getClickPower() * eventActiveMultiplier;
     state.score += earned;
@@ -192,6 +210,7 @@ document.getElementById('click-me').addEventListener('click', (e) => {
     updateUI();
 });
 
+// Chiffres Volants
 function createFloatingText(x, y, text, color) {
     const txt = document.createElement('div');
     txt.className = 'floating-text';
@@ -203,54 +222,76 @@ function createFloatingText(x, y, text, color) {
     setTimeout(() => txt.remove(), 800);
 }
 
-// Achats Bâtiments
+// Achat d'unités
 state.miners.forEach(m => {
     document.getElementById(`buy-${m.id}`).addEventListener('click', () => {
         if (state.score >= m.cost) {
             state.score -= m.cost;
             m.count++;
             updateUI();
+            saveGame();
         }
     });
 });
 
-// Achats Prestige
+// Interactions Boutique de Prestige
 document.getElementById('upgrade-click').addEventListener('click', () => {
     const cost = Math.floor(1 * Math.pow(2, state.clickUpgradeLevel));
-    if(state.gems >= cost) { state.gems -= cost; state.clickUpgradeLevel++; updateUI(); }
+    if(state.gems >= cost) { state.gems -= cost; state.clickUpgradeLevel++; updateUI(); saveGame(); }
 });
 
 document.getElementById('upgrade-discount').addEventListener('click', () => {
     const cost = Math.floor(2 * Math.pow(2.5, state.discountUpgradeLevel));
-    if(state.gems >= cost) { state.gems -= cost; state.discountUpgradeLevel++; updateUI(); }
+    if(state.gems >= cost) { state.gems -= cost; state.discountUpgradeLevel++; updateUI(); saveGame(); }
 });
 
 document.getElementById('upgrade-events').addEventListener('click', () => {
-    if(state.gems >= 2 && !state.hasEventsUnlocked) { state.gems -= 2; state.hasEventsUnlocked = true; updateUI(); }
+    if(state.gems >= 2 && !state.hasEventsUnlocked) { state.gems -= 2; state.hasEventsUnlocked = true; updateUI(); saveGame(); }
 });
 
 document.getElementById('upgrade-rift').addEventListener('click', () => {
-    if(state.gems >= 4 && state.hasEventsUnlocked && !state.hasRiftsUnlocked) { state.gems -= 4; state.hasRiftsUnlocked = true; updateUI(); }
+    if(state.gems >= 4 && state.hasEventsUnlocked && !state.hasRiftsUnlocked) { state.gems -= 4; state.hasRiftsUnlocked = true; updateUI(); saveGame(); }
 });
 
-// Action Reload
+// --- SYSTEM DE RELOAD AVEC PALIER BONUS TOUS LES 5 PRESTIGES ---
 document.getElementById('prestige-btn').addEventListener('click', () => {
     const costOfPrestige = getObjectiveNeeded();
     if (state.score >= costOfPrestige) {
-        if (confirm(`Dépenser ${costOfPrestige.toLocaleString()} points pour renaître et gagner 1 Gemme ?`)) {
-            state.score -= costOfPrestige;
-            state.gems += 1;
+        const nextPrestigeLevel = state.prestigeLevel + 1;
+        const isBonusLevel = (nextPrestigeLevel % 5 === 0);
+        const gemsToEarn = isBonusLevel ? 2 : 1;
+
+        let message = `Activer le Reload ? Votre score et vos unités reviendront à 0 en échange de ${gemsToEarn} Gemme(s).`;
+        if (isBonusLevel) {
+            message = `🎉 PALIER DE PRESTIGE MALIN ! Niveau ${nextPrestigeLevel} détecté. Confirmer le Reload pour encaisser DEUX GEMMES au lieu d'une ?`;
+        }
+
+        if (confirm(message)) {
+            // Remise à zéro totale du score courant
+            state.score = 0;
+            
+            // Crédit des gemmes
+            state.gems += gemsToEarn;
             state.prestigeLevel++;
+            
+            // Perte des bâtiments
             state.miners.forEach(m => m.count = 0);
+            
+            saveGame();
             updateUI();
         }
     }
 });
 
-// Tick Engine
+
+// --- ENGIN TEMPOREL DE PRODUCTION INTERNE (10 ticks / sec) ---
 setInterval(() => {
     let bps = calculateTotalBPS();
-    if(bps > 0) { state.score += (bps / 10); updateUI(); }
+    if(bps > 0) { 
+        state.score += (bps / 10); 
+        updateUI(); 
+    }
 }, 100);
 
+// Premier démarrage
 updateUI();
