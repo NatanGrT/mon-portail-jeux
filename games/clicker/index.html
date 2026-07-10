@@ -8,10 +8,40 @@
 <body>
     <div class="game-container">
         <a href="../../index.html" class="back-link">← Retour au Hub</a>
+        
         <h1>Score : <span id="score">0</span></h1>
+        <p>Production passive : <span id="bps">0</span>/s</p>
+        <p>Bonus de Prestige : +<span id="prestige-bonus">0</span>%</p>
+
         <button id="click-me">CLIQUE ICI !</button>
-        <p>Objectif : 100 clics</p>
+        <p>Objectif pour Reload : 1 000 points cumulés</p>
+
+        <div class="shop-section">
+            <h2>Boutique</h2>
+            
+            <div class="shop-item">
+                <button id="buy-farmer" class="shop-btn" disabled>
+                    Engager un Fermier (Coût : <span id="farmer-cost">15</span>)
+                </button>
+                <span class="count" id="farmer-count">0</span>
+            </div>
+
+            <div class="shop-item">
+                <button id="buy-tractor" class="shop-btn" disabled>
+                    Acheter un Tracteur (Coût : <span id="tractor-cost">100</span>)
+                </button>
+                <span class="count" id="tractor-count">0</span>
+            </div>
+        </div>
+
+        <div class="prestige-section">
+            <button id="prestige-btn" class="prestige-btn" disabled>
+                Faire un RELOAD (Prestige)
+            </button>
+            <p><small>Réinitialise la partie en échange d'un bonus permanent de +10% de production</small></p>
+        </div>
     </div>
+
     <script src="script.js"></script>
 </body>
 </html>
