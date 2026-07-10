@@ -180,6 +180,56 @@ function createCardElement(card, index) {
     return cardEl;
 }
 
+// --- OPTIMISATION FINALE : RENDU ÉVENTAIL SÉCURISÉ POUR COMPTER LES 18 CARTES SANS PERTE ---
+function renderHumanHand() {
+    if (!humanHandDiv) return;
+    humanHandDiv.innerHTML = '';
+    
+    // Zone principale avec défilement
+    humanHandDiv.style.display = "flex";
+    humanHandDiv.style.width = "100%";            
+    humanHandDiv.style.overflowX = "auto";        
+    humanHandDiv.style.overflowY = "visible";     
+    humanHandDiv.style.whiteSpace = "nowrap";     
+    humanHandDiv.style.padding = "20px 15px";     
+    humanHandDiv.style.webkitOverflowScrolling = "touch"; 
+
+    // Sous-conteneur de protection pour empêcher le masquage des dernières cartes (Rois/Atouts à droite)
+    const innerWrapper = document.createElement('div');
+    innerWrapper.style.display = "flex";
+    innerWrapper.style.flexWrap = "nowrap";
+    innerWrapper.style.paddingRight = "50px"; 
+    humanHandDiv.appendChild(innerWrapper);
+
+    playersHands.human.forEach((card, index) => {
+        const cardEl = createCardElement(card, index);
+        
+        cardEl.style.flex = "0 0 auto";           
+        cardEl.style.transform = "scale(0.83)";    
+        cardEl.style.transformOrigin = "top left"; 
+        cardEl.style.marginRight = "-25px"; // Effet d'éventail compact      
+        cardEl.style.position = "relative";
+        cardEl.style.display = "inline-block";
+        
+        if (gamePhase === 'discard' && selectedDiscards.includes(index)) {
+            cardEl.classList.add('selected-discard');
+            cardEl.style.transform = "scale(0.83) translateY(-15px)"; 
+        }
+        
+        if (gamePhase === 'playing' && currentTurnPlayer === 'human') {
+            if (!isCardPlayable(card, playersHands.human)) {
+                cardEl.style.opacity = "0.4";
+                cardEl.style.filter = "grayscale(60%)";
+                cardEl.style.cursor = "not-allowed";
+            } else {
+                cardEl.style.boxShadow = "0 0 12px rgba(225, 177, 44, 0.7)";
+            }
+        }
+        
+        innerWrapper.appendChild(cardEl);
+    });
+}
+
 function getSymbol(couleur) {
     switch(couleur) {
         case 'coeur': return '♥'; case 'carreau': return '♦'; case 'trefle': return '♣'; case 'pique': return '♠'; case 'atout': return '★'; default: return '🃏';
@@ -621,15 +671,12 @@ function updateLiveScoreboard() {
 
     for (let p in liveScores) {
         if (totalPlayers === 5) {
-            // RÈGLE DE L'ANONYMAT TANT QUE LE ROI N'EST PAS REVELE :
-            // Si le partenaire n'est pas encore connu, seule l'équipe du preneur est à l'Attaque, tous les autres en Défense.
             if (p === contractor || (partnerRevealed && p === partnerKey)) {
                 attackTotal += liveScores[p];
             } else {
                 defenseTotal += liveScores[p];
             }
         } else {
-            // Mode classique 4 joueurs
             if (p === contractor) {
                 attackTotal += liveScores[p];
             } else {
@@ -660,32 +707,6 @@ function updateCumulativeScoreboard() {
         const b4Cum = document.getElementById('cum-pt-bot4');
         if(b4Cum) b4Cum.innerText = formatScore(cumulativeScores.bot4);
     }
-}
-
-function renderHumanHand() {
-    if (!humanHandDiv) return;
-    humanHandDiv.innerHTML = '';
-    humanHandDiv.style.overflow = 'visible';
-    
-    playersHands.human.forEach((card, index) => {
-        const cardEl = createCardElement(card, index);
-        
-        if (gamePhase === 'discard' && selectedDiscards.includes(index)) {
-            cardEl.classList.add('selected-discard');
-        }
-        
-        if (gamePhase === 'playing' && currentTurnPlayer === 'human') {
-            if (!isCardPlayable(card, playersHands.human)) {
-                cardEl.style.opacity = "0.4";
-                cardEl.style.filter = "grayscale(60%)";
-                cardEl.style.cursor = "not-allowed";
-            } else {
-                cardEl.style.boxShadow = "0 0 10px rgba(225, 177, 44, 0.4)";
-            }
-        }
-        
-        humanHandDiv.appendChild(cardEl);
-    });
 }
 
 function endRound() {
