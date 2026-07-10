@@ -40,8 +40,11 @@ body {
     flex-direction: column;
     box-shadow: 0 20px 40px rgba(0,0,0,0.4);
     backdrop-filter: blur(12px);
+    
+    /* LES DEUX LIGNES MAGIQUES ICI : */
+    max-height: 100%;
+    overflow-y: auto; 
 }
-
 h2 {
     font-size: 1.1rem;
     font-weight: 700;
