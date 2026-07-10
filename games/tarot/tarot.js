@@ -1,5 +1,6 @@
 let deck = [];
 let playersHands = { human: [], bot1: [], bot2: [], bot3: [], bot4: [] };
+let wonTricks = { human: [], bot1: [], bot2: [], bot3: [], bot4: [] }; 
 let chien = [];
 let selectedDiscards = [];
 let currentDifficulty = 'intermediaire';
@@ -10,6 +11,11 @@ let currentRound = 1;
 let maxRounds = 5;
 let currentContract = 'Aucun';
 let contractor = ''; 
+
+// --- VARIABLES POUR LE MODE 5 JOUEURS ---
+let calledKingSuit = ''; 
+let partnerKey = '';     
+let partnerRevealed = false; 
 
 const playerOrder = ['human', 'bot1', 'bot2', 'bot3']; 
 let currentDealerIndex = 0; 
@@ -31,30 +37,30 @@ const biddingPanel = document.getElementById('bidding-panel');
 const chienDiscardPanel = document.getElementById('chien-discard-panel');
 const chienCardsZone = document.getElementById('chien-cards-zone');
 const roundEndPanel = document.getElementById('round-end-panel');
-const gameOverPanel = document.getElementById('game-over-panel');
+const gameOverPanel = document.getElementById('gameOverPanel') || document.getElementById('game-over-panel');
 const restartGameBtn = document.getElementById('restart-game-btn');
 
 if (startBtn) startBtn.addEventListener('click', startNewGame);
 if (restartGameBtn) restartGameBtn.addEventListener('click', resetAllAndRestart);
 
 function startNewGame() {
-    totalPlayers = parseInt(document.getElementById('player-count').value);
-    maxRounds = parseInt(document.getElementById('round-count').value);
-    currentDifficulty = document.getElementById('bot-difficulty').value;
+    totalPlayers = parseInt(document.getElementById('player-count')?.value || 4);
+    maxRounds = parseInt(document.getElementById('round-count')?.value || 5);
+    currentDifficulty = document.getElementById('bot-difficulty')?.value || 'intermediaire';
     
     playerOrder.length = 0;
     playerOrder.push('human', 'bot1', 'bot2', 'bot3');
     if(totalPlayers === 5) {
         playerOrder.push('bot4');
+        if(document.getElementById('slot-bot4')) document.getElementById('slot-bot4').classList.remove('hidden');
         document.querySelectorAll('.id-bot4').forEach(el => el.classList.remove('hidden'));
-        document.getElementById('slot-bot4').classList.remove('hidden');
     } else {
+        if(document.getElementById('slot-bot4')) document.getElementById('slot-bot4').classList.add('hidden');
         document.querySelectorAll('.id-bot4').forEach(el => el.classList.add('hidden'));
-        document.getElementById('slot-bot4').classList.add('hidden');
     }
 
-    setupScreen.classList.add('hidden');
-    gameBoard.classList.remove('hidden');
+    if (setupScreen) setupScreen.classList.add('hidden');
+    if (gameBoard) gameBoard.classList.remove('hidden');
     
     cumulativeScores = { human: 0, bot1: 0, bot2: 0, bot3: 0, bot4: 0 };
     currentRound = 1;
@@ -66,21 +72,27 @@ function startNewGame() {
 
 function launchRound() {
     liveScores = { human: 0, bot1: 0, bot2: 0, bot3: 0, bot4: 0 };
+    wonTricks = { human: [], bot1: [], bot2: [], bot3: [], bot4: [] };
     contractorBoutsCount = 0;
+    
+    calledKingSuit = '';
+    partnerKey = '';
+    partnerRevealed = false;
+
     updateLiveScoreboard();
     trickCards = [];
     selectedDiscards = [];
     currentContract = 'Aucun';
     contractor = '';
     
-    document.getElementById('current-round').innerText = `${currentRound} / ${maxRounds}`;
-    document.getElementById('current-contract-badge').innerText = 'Aucune';
+    if (document.getElementById('current-round')) document.getElementById('current-round').innerText = `${currentRound} / ${maxRounds}`;
+    if (document.getElementById('current-contract-badge')) document.getElementById('current-contract-badge').innerText = 'Aucune';
     
     const dealerLabel = playerOrder[currentDealerIndex] === 'human' ? 'Vous' : playerOrder[currentDealerIndex].toUpperCase();
-    document.getElementById('current-dealer').innerText = dealerLabel;
+    if (document.getElementById('current-dealer')) document.getElementById('current-dealer').innerText = dealerLabel;
 
-    roundEndPanel.classList.add('hidden-panel');
-    playedCardsZone.innerHTML = '';
+    if (roundEndPanel) roundEndPanel.classList.add('hidden-panel');
+    if (playedCardsZone) playedCardsZone.innerHTML = '';
     
     buildDeck();
     shuffleDeck();
@@ -129,6 +141,7 @@ function sortHand(hand) {
 }
 
 function renderChienHidden() {
+    if (!chienCardsZone) return;
     chienCardsZone.innerHTML = '';
     chien.forEach(() => {
         const cEl = document.createElement('div');
@@ -138,8 +151,12 @@ function renderChienHidden() {
 }
 
 function renderHumanHandWithDelay() {
+    if (!humanHandDiv) return;
     humanHandDiv.innerHTML = '';
-    gameStatus.innerText = "Distribution des cartes...";
+    humanHandDiv.style.visibility = 'visible';
+    humanHandDiv.style.overflow = 'visible'; 
+    
+    if (gameStatus) gameStatus.innerText = "Distribution des cartes...";
     playersHands.human.forEach((card, index) => {
         setTimeout(() => {
             const cardEl = createCardElement(card, index);
@@ -149,7 +166,7 @@ function renderHumanHandWithDelay() {
             if (index === playersHands.human.length - 1) {
                 startBiddingPhase();
             }
-        }, index * 20);
+        }, index * 25);
     });
 }
 
@@ -171,8 +188,8 @@ function getSymbol(couleur) {
 
 function startBiddingPhase() {
     gamePhase = 'bidding';
-    gameStatus.innerText = "Faites votre annonce (Petite, Pouce, Garde...).";
-    biddingPanel.classList.remove('hidden-panel');
+    if (gameStatus) gameStatus.innerText = "Faites votre annonce (Petite, Pousse, Garde...).";
+    if (biddingPanel) biddingPanel.classList.remove('hidden-panel');
 
     document.querySelectorAll('.btn-bid').forEach(btn => {
         btn.onclick = (e) => {
@@ -183,63 +200,147 @@ function startBiddingPhase() {
 }
 
 function processHumanBid(bid) {
-    biddingPanel.classList.add('hidden-panel');
+    if (biddingPanel) biddingPanel.classList.add('hidden-panel');
     if (bid !== 'passe') {
         currentContract = bid.toUpperCase();
         contractor = 'human';
-        document.getElementById('current-contract-badge').innerText = currentContract;
+        if (document.getElementById('current-contract-badge')) document.getElementById('current-contract-badge').innerText = currentContract;
     }
 
-    gameStatus.innerText = "Les robots parlent...";
+    if (gameStatus) gameStatus.innerText = "Les robots parlent...";
     setTimeout(() => {
         if (contractor === 'human') {
-            gameStatus.innerText = `Vous êtes Preneur (Contrat : ${currentContract}).`;
-            if (currentContract === 'PETITE' || currentContract === 'POUCE' || currentContract === 'GARDE') {
-                triggerChienIntegration();
+            if (totalPlayers === 5) {
+                askForKing();
             } else {
-                startPlayingPhase();
+                continueAfterBid();
             }
         } else {
             currentContract = 'POUCE';
             contractor = 'bot1';
-            document.getElementById('current-contract-badge').innerText = "POUCE (Bot 1)";
-            gameStatus.innerText = "Bot 1 prend un POUCE. Début du jeu.";
-            setTimeout(startPlayingPhase, 1500);
+            
+            if (totalPlayers === 5) {
+                const suits = ['coeur', 'carreau', 'trefle', 'pique'];
+                calledKingSuit = suits[Math.floor(Math.random() * 4)];
+                findPartner();
+                const symbol = getSymbol(calledKingSuit);
+                
+                if(document.getElementById('current-contract-badge')) {
+                    document.getElementById('current-contract-badge').innerText = `POUCE (Bot 1) + R de ${symbol}`;
+                }
+                if (gameStatus) gameStatus.innerText = `Bot 1 prend une POUCE et appelle le Roi de ${symbol}.`;
+            } else {
+                if (document.getElementById('current-contract-badge')) document.getElementById('current-contract-badge').innerText = "POUCE (Bot 1)";
+                if (gameStatus) gameStatus.innerText = "Bot 1 prend une POUCE.";
+            }
+            continueAfterBid();
         }
     }, 1000);
 }
 
+function askForKing() {
+    let choix = prompt("Choisissez la couleur du Roi à appeler :\n1: Cœur\n2: Carreau\n3: Trèfle\n4: Pique", "1");
+    
+    if (choix === "2") calledKingSuit = 'carreau';
+    else if (choix === "3") calledKingSuit = 'trefle';
+    else if (choix === "4") calledKingSuit = 'pique';
+    else calledKingSuit = 'coeur';
+
+    findPartner();
+    const symbol = getSymbol(calledKingSuit);
+    
+    if (document.getElementById('current-contract-badge')) {
+        document.getElementById('current-contract-badge').innerText = `${currentContract} + R de ${symbol}`;
+    }
+    if (gameStatus) gameStatus.innerText = `Vous appelez le Roi de ${symbol}.`;
+    
+    continueAfterBid();
+}
+
+function findPartner() {
+    for (let p in playersHands) {
+        let hasKing = playersHands[p].some(card => card.valeur === 'R' && card.couleur === calledKingSuit);
+        if (hasKing) {
+            partnerKey = p;
+            break;
+        }
+    }
+}
+
+function continueAfterBid() {
+    gamePhase = 'reveal-chien';
+    if (gameStatus) gameStatus.innerText = "Révélation du Chien...";
+    
+    if (chienCardsZone) {
+        chienCardsZone.innerHTML = '';
+        chien.forEach((card, index) => {
+            const cEl = document.createElement('div');
+            cEl.className = `card ${card.couleur} animated-deal`;
+            cEl.style.animationDelay = `${index * 150}ms`;
+            cEl.innerHTML = `<div class="top-left">${card.valeur}</div><div class="symbol-center">${getSymbol(card.couleur)}</div><div class="bottom-right">${card.valeur}</div>`;
+            chienCardsZone.appendChild(cEl);
+        });
+    }
+
+    setTimeout(() => {
+        if (currentContract === 'PETITE' || currentContract === 'POUCE' || currentContract === 'GARDE') {
+            if (contractor === 'human') {
+                triggerChienIntegration();
+            } else {
+                playersHands[contractor].push(...chien);
+                sortHand(playersHands[contractor]);
+                renderChienHidden();
+                startPlayingPhase();
+            }
+        } else {
+            renderChienHidden();
+            startPlayingPhase();
+        }
+    }, 2500);
+}
+
 function triggerChienIntegration() {
     gamePhase = 'discard';
-    gameStatus.innerText = "Faites votre écart du Chien.";
+    const required = totalPlayers === 4 ? 6 : 3;
+    if (gameStatus) gameStatus.innerText = `Faites votre écart du Chien (${required} cartes).`;
     
-    chienCardsZone.innerHTML = '';
-    chien.forEach(card => {
-        const cEl = document.createElement('div');
-        cEl.className = `card ${card.couleur}`;
-        cEl.innerHTML = `<div class="top-left">${card.valeur}</div><div class="symbol-center">${getSymbol(card.couleur)}</div><div class="bottom-right">${card.valeur}</div>`;
-        chienCardsZone.appendChild(cEl);
-    });
+    if (chienCardsZone) {
+        chienCardsZone.innerHTML = '';
+        chien.forEach(card => {
+            const cEl = document.createElement('div');
+            cEl.className = `card ${card.couleur}`;
+            cEl.innerHTML = `<div class="top-left">${card.valeur}</div><div class="symbol-center">${getSymbol(card.couleur)}</div><div class="bottom-right">${card.valeur}</div>`;
+            chienCardsZone.appendChild(cEl);
+        });
+    }
 
     playersHands.human.push(...chien);
     sortHand(playersHands.human);
     renderHumanHand();
 
-    chienDiscardPanel.classList.remove('hidden-panel');
+    if (chienDiscardPanel) {
+        chienDiscardPanel.classList.remove('hidden-panel');
+        const counterContainer = chienDiscardPanel.querySelector('p');
+        if (counterContainer) {
+            counterContainer.innerHTML = `Cartes écartées : <span id="discard-count">0</span> / ${required}`;
+        }
+    }
     selectedDiscards = [];
     updateDiscardCounter();
 }
 
 function updateDiscardCounter() {
     const required = totalPlayers === 4 ? 6 : 3;
-    document.getElementById('discard-count').innerText = selectedDiscards.length;
+    if (document.getElementById('discard-count')) document.getElementById('discard-count').innerText = selectedDiscards.length;
     const validateBtn = document.getElementById('validate-chien-btn');
     
-    if (selectedDiscards.length === required) {
-        validateBtn.disabled = false;
-        validateBtn.onclick = validateChienDiscard;
-    } else {
-        validateBtn.disabled = true;
+    if (validateBtn) {
+        if (selectedDiscards.length === required) {
+            validateBtn.disabled = false;
+            validateBtn.onclick = validateChienDiscard;
+        } else {
+            validateBtn.disabled = true;
+        }
     }
 }
 
@@ -247,10 +348,10 @@ function validateChienDiscard() {
     selectedDiscards.sort((a,b) => b - a);
     selectedDiscards.forEach(idx => {
         const removedCard = playersHands.human.splice(idx, 1)[0];
-        if (isBout(removedCard)) contractorBoutsCount++;
+        wonTricks.human.push(removedCard); 
     });
 
-    chienDiscardPanel.classList.add('hidden-panel');
+    if (chienDiscardPanel) chienDiscardPanel.classList.add('hidden-panel');
     renderChienHidden();
     renderHumanHand();
     startPlayingPhase();
@@ -276,14 +377,60 @@ function handleCardClick(index, cardEl) {
         }
         updateDiscardCounter();
     } else if (gamePhase === 'playing' && currentTurnPlayer === 'human') {
+        if (!isCardPlayable(playersHands.human[index], playersHands.human)) {
+            alert("Coup illégal ! Vous devez fournir à la couleur, couper ou surcouper si possible.");
+            return;
+        }
+        gamePhase = 'waiting'; 
         playHumanTurn(index, cardEl);
     }
+}
+
+function isCardPlayable(card, hand) {
+    if (card.couleur === 'excuse') return true; 
+    if (!requestedColor) return true; 
+
+    if (requestedColor !== 'atout') {
+        const hasColor = hand.some(c => c.couleur === requestedColor);
+        if (hasColor) return card.couleur === requestedColor;
+
+        const hasAtout = hand.some(c => c.couleur === 'atout');
+        if (hasAtout) {
+            if (card.couleur !== 'atout') return false;
+            return checkSurcoupe(card, hand);
+        }
+        return true; 
+    } else {
+        const hasAtout = hand.some(c => c.couleur === 'atout');
+        if (hasAtout) {
+            if (card.couleur !== 'atout') return false;
+            return checkSurcoupe(card, hand);
+        }
+        return true; 
+    }
+}
+
+function checkSurcoupe(card, hand) {
+    let maxAtoutOnTable = 0;
+    trickCards.forEach(tc => {
+        if (tc.card.couleur === 'atout' && tc.card.valeur !== 'EX') {
+            if (tc.card.valeur > maxAtoutOnTable) maxAtoutOnTable = tc.card.valeur;
+        }
+    });
+
+    if (maxAtoutOnTable === 0) return true; 
+
+    const canSurcouper = hand.some(c => c.couleur === 'atout' && c.valeur > maxAtoutOnTable);
+    if (canSurcouper) {
+        return card.valeur > maxAtoutOnTable;
+    }
+    return true; 
 }
 
 function startPlayingPhase() {
     gamePhase = 'playing';
     trickCards = [];
-    playedCardsZone.innerHTML = '';
+    if (playedCardsZone) playedCardsZone.innerHTML = '';
     
     const initialPlayerIndex = (currentDealerIndex + 1) % playerOrder.length;
     currentTurnPlayer = playerOrder[initialPlayerIndex];
@@ -297,10 +444,12 @@ function processGameCycle() {
         return;
     }
 
+    gamePhase = 'playing'; 
     if (currentTurnPlayer === 'human') {
-        gameStatus.innerText = trickCards.length === 0 ? "À vous de commencer le pli !" : "À vous de fournir.";
+        if (gameStatus) gameStatus.innerText = trickCards.length === 0 ? "À vous de commencer le pli !" : "À vous de fournir.";
+        renderHumanHand(); 
     } else {
-        gameStatus.innerText = `Le ${currentTurnPlayer.toUpperCase()} réfléchit...`;
+        if (gameStatus) gameStatus.innerText = `Le ${currentTurnPlayer.toUpperCase()} réfléchit...`;
         setTimeout(executeBotTurn, 500);
     }
 }
@@ -309,27 +458,53 @@ function playHumanTurn(cardIndex, cardEl) {
     cardEl.classList.add('played-anim');
     setTimeout(() => {
         const cardPlayed = playersHands.human.splice(cardIndex, 1)[0];
-        renderHumanHand();
         
-        if (trickCards.length === 0) requestedColor = cardPlayed.couleur;
+        checkPartnerReveal(cardPlayed, 'human');
+
+        if (trickCards.length === 0) {
+            requestedColor = cardPlayed.couleur === 'excuse' ? '' : cardPlayed.couleur;
+        }
+        
         trickCards.push({ player: 'human', card: cardPlayed });
         appendCardToTable(cardPlayed, "Vous");
         
+        renderHumanHand();
         setNextPlayerTurn();
         processGameCycle();
-    }, 1500);
+    }, 400); 
 }
 
 function executeBotTurn() {
     const botHand = playersHands[currentTurnPlayer];
     const cardPlayed = getBotMove(botHand, trickCards.length === 0 ? '' : requestedColor);
     
-    if (trickCards.length === 0) requestedColor = cardPlayed.couleur;
-    trickCards.push({ player: 'currentTurnPlayer', playerKey: currentTurnPlayer, card: cardPlayed });
+    checkPartnerReveal(cardPlayed, currentTurnPlayer);
+
+    if (trickCards.length === 0 && cardPlayed.couleur !== 'excuse') {
+        requestedColor = cardPlayed.couleur;
+    }
+    trickCards.push({ player: currentTurnPlayer, card: cardPlayed });
     
     appendCardToTable(cardPlayed, currentTurnPlayer.toUpperCase());
     setNextPlayerTurn();
     processGameCycle();
+}
+
+function checkPartnerReveal(card, playerKey) {
+    if (totalPlayers === 5 && !partnerRevealed && card.valeur === 'R' && card.couleur === calledKingSuit) {
+        partnerRevealed = true;
+        const name = playerKey === 'human' ? 'Vous' : playerKey.toUpperCase();
+        const contractorName = contractor === 'human' ? 'Vous' : contractor.toUpperCase();
+        
+        alert(`📢 Le Roi de ${getSymbol(calledKingSuit)} est sorti ! ${name} est le partenaire de l'Attaque !`);
+        
+        const symbol = getSymbol(calledKingSuit);
+        const partnerLabel = playerKey === 'human' ? 'Vous' : playerKey.toUpperCase();
+        if (document.getElementById('current-contract-badge')) {
+            document.getElementById('current-contract-badge').innerText = `${currentContract} + R de ${symbol} (${contractorName} + ${partnerLabel})`;
+        }
+        updateLiveScoreboard();
+    }
 }
 
 function setNextPlayerTurn() {
@@ -339,15 +514,15 @@ function setNextPlayerTurn() {
 }
 
 function getBotMove(botHand, colorReq) {
-    if (!colorReq) return botHand.splice(0, 1)[0];
-    const matches = botHand.filter(c => c.couleur === colorReq);
-    if (matches.length > 0) return botHand.splice(botHand.indexOf(matches[0]), 1)[0];
-    const atouts = botHand.filter(c => c.couleur === 'atout');
-    if (atouts.length > 0) return botHand.splice(botHand.indexOf(atouts[0]), 1)[0];
-    return botHand.splice(0, 1)[0];
+    let legalCards = botHand.filter(c => isCardPlayable(c, botHand));
+    if (legalCards.length === 0) legalCards = botHand; 
+
+    const chosenCard = legalCards[0];
+    return botHand.splice(botHand.indexOf(chosenCard), 1)[0];
 }
 
 function appendCardToTable(card, playerLabel) {
+    if (!playedCardsZone) return;
     const tableCard = document.createElement('div');
     tableCard.className = `card ${card.couleur}`;
     tableCard.style.transform = `scale(0.78) rotate(${Math.floor(Math.random() * 10) - 5}deg)`;
@@ -365,10 +540,21 @@ function isBout(card) {
 }
 
 function evaluateTrick() {
-    let winningPlay = trickCards[0];
+    let winningPlay = null;
     
-    for (let i = 1; i < trickCards.length; i++) {
-        const current = trickCards[i];
+    let validPlays = trickCards.filter(tc => tc.card.couleur !== 'excuse');
+    if (validPlays.length === 0) validPlays = [trickCards[0]]; 
+
+    winningPlay = validPlays[0];
+    
+    let realRequestedColor = requestedColor;
+    if (!realRequestedColor && trickCards.length > 0) {
+        const firstNonExcuse = trickCards.find(tc => tc.card.couleur !== 'excuse');
+        if (firstNonExcuse) realRequestedColor = firstNonExcuse.card.couleur;
+    }
+
+    for (let i = 1; i < validPlays.length; i++) {
+        const current = validPlays[i];
         const currentCard = current.card;
         const bestCard = winningPlay.card;
         
@@ -376,33 +562,37 @@ function evaluateTrick() {
             winningPlay = current;
         } else if (currentCard.couleur === 'atout' && bestCard.couleur === 'atout') {
             if (currentCard.valeur > bestCard.valeur) winningPlay = current;
-        } else if (currentCard.couleur === requestedColor && bestCard.couleur === requestedColor) {
+        } else if (currentCard.couleur === realRequestedColor && bestCard.couleur === realRequestedColor) {
             if (getCardPower(currentCard.valeur) > getCardPower(bestCard.valeur)) winningPlay = current;
         }
     }
 
     let pointsInTrick = 0;
+    const winnerKey = winningPlay.player;
+
     trickCards.forEach(tc => { 
         pointsInTrick += getCardPoints(tc.card); 
-        if (tc.player === contractor || tc.playerKey === contractor) {
-            if (isBout(tc.card)) contractorBoutsCount++;
+        if (tc.card.couleur === 'excuse') {
+            wonTricks[tc.player].push(tc.card);
+        } else {
+            wonTricks[winnerKey].push(tc.card); 
         }
     });
 
-    const winnerKey = winningPlay.player === 'human' ? 'human' : winningPlay.playerKey;
     liveScores[winnerKey] += Math.round(pointsInTrick);
     currentTurnPlayer = winnerKey; 
+    requestedColor = ''; 
 
     updateLiveScoreboard();
 
     const displayWinnerName = winnerKey === 'human' ? 'Vous' : winnerKey.toUpperCase();
-    gameStatus.innerText = `${displayWinnerName} remporte le pli (+${Math.round(pointsInTrick)} pts)`;
+    if (gameStatus) gameStatus.innerText = `${displayWinnerName} remporte le pli (+${Math.round(pointsInTrick)} pts)`;
 
     setTimeout(() => {
-        playedCardsZone.innerHTML = '';
+        if (playedCardsZone) playedCardsZone.innerHTML = '';
         trickCards = [];
         
-        if (playersHands.human.length > 0) {
+        if (playersHands.human && playersHands.human.length > 0) {
             processGameCycle();
         } else {
             endRound();
@@ -430,90 +620,134 @@ function updateLiveScoreboard() {
     let defenseTotal = 0;
 
     for (let p in liveScores) {
-        if (p === contractor) attackTotal += liveScores[p];
-        else defenseTotal += liveScores[p];
+        if (totalPlayers === 5) {
+            // RÈGLE DE L'ANONYMAT TANT QUE LE ROI N'EST PAS REVELE :
+            // Si le partenaire n'est pas encore connu, seule l'équipe du preneur est à l'Attaque, tous les autres en Défense.
+            if (p === contractor || (partnerRevealed && p === partnerKey)) {
+                attackTotal += liveScores[p];
+            } else {
+                defenseTotal += liveScores[p];
+            }
+        } else {
+            // Mode classique 4 joueurs
+            if (p === contractor) {
+                attackTotal += liveScores[p];
+            } else {
+                defenseTotal += liveScores[p];
+            }
+        }
     }
 
-    document.getElementById('live-pt-attack').innerText = `${attackTotal} pt`;
-    document.getElementById('live-pt-defense').innerText = `${defenseTotal} pt`;
+    if (document.getElementById('live-pt-attack')) document.getElementById('live-pt-attack').innerText = `${attackTotal} pt`;
+    if (document.getElementById('live-pt-defense')) document.getElementById('live-pt-defense').innerText = `${defenseTotal} pt`;
 
-    document.getElementById('live-pt-human').innerText = `${liveScores.human} pt`;
-    document.getElementById('live-pt-bot1').innerText = `${liveScores.bot1} pt`;
-    document.getElementById('live-pt-bot2').innerText = `${liveScores.bot2} pt`;
-    document.getElementById('live-pt-bot3').innerText = `${liveScores.bot3} pt`;
-    if(totalPlayers === 5 && document.getElementById('live-pt-bot4')) {
+    if (document.getElementById('live-pt-human')) document.getElementById('live-pt-human').innerText = `${liveScores.human} pt`;
+    if (document.getElementById('live-pt-bot1')) document.getElementById('live-pt-bot1').innerText = `${liveScores.bot1} pt`;
+    if (document.getElementById('live-pt-bot2')) document.getElementById('live-pt-bot2').innerText = `${liveScores.bot2} pt`;
+    if (document.getElementById('live-pt-bot3')) document.getElementById('live-pt-bot3').innerText = `${liveScores.bot3} pt`;
+    if (totalPlayers === 5 && document.getElementById('live-pt-bot4')) {
         document.getElementById('live-pt-bot4').innerText = `${liveScores.bot4} pt`;
     }
 }
 
 function updateCumulativeScoreboard() {
     const formatScore = (num) => num > 0 ? `+${num}` : num;
-    document.getElementById('cum-pt-human').innerText = formatScore(cumulativeScores.human);
-    document.getElementById('cum-pt-bot1').innerText = formatScore(cumulativeScores.bot1);
-    document.getElementById('cum-pt-bot2').innerText = formatScore(cumulativeScores.bot2);
-    document.getElementById('cum-pt-bot3').innerText = formatScore(cumulativeScores.bot3);
-    if(totalPlayers === 5) {
+    if (document.getElementById('cum-pt-human')) document.getElementById('cum-pt-human').innerText = formatScore(cumulativeScores.human);
+    if (document.getElementById('cum-pt-bot1')) document.getElementById('cum-pt-bot1').innerText = formatScore(cumulativeScores.bot1);
+    if (document.getElementById('cum-pt-bot2')) document.getElementById('cum-pt-bot2').innerText = formatScore(cumulativeScores.bot2);
+    if (document.getElementById('cum-pt-bot3')) document.getElementById('cum-pt-bot3').innerText = formatScore(cumulativeScores.bot3);
+    if (totalPlayers === 5) {
         const b4Cum = document.getElementById('cum-pt-bot4');
         if(b4Cum) b4Cum.innerText = formatScore(cumulativeScores.bot4);
     }
 }
 
 function renderHumanHand() {
+    if (!humanHandDiv) return;
     humanHandDiv.innerHTML = '';
+    humanHandDiv.style.overflow = 'visible';
+    
     playersHands.human.forEach((card, index) => {
         const cardEl = createCardElement(card, index);
+        
         if (gamePhase === 'discard' && selectedDiscards.includes(index)) {
             cardEl.classList.add('selected-discard');
         }
+        
+        if (gamePhase === 'playing' && currentTurnPlayer === 'human') {
+            if (!isCardPlayable(card, playersHands.human)) {
+                cardEl.style.opacity = "0.4";
+                cardEl.style.filter = "grayscale(60%)";
+                cardEl.style.cursor = "not-allowed";
+            } else {
+                cardEl.style.boxShadow = "0 0 10px rgba(225, 177, 44, 0.4)";
+            }
+        }
+        
         humanHandDiv.appendChild(cardEl);
     });
 }
 
-// --- LOGIQUE FIN DE MANCHE : MARQUE POPULAIRE / DE COMPTOIR ---
 function endRound() {
     gamePhase = 'round-end';
+
+    if (currentContract === 'PETITE' || currentContract === 'POUCE' || currentContract === 'GARDE') {
+        if (wonTricks[contractor]) wonTricks[contractor].push(...chien);
+    }
+
+    let totalAttackCards = wonTricks[contractor] ? [...wonTricks[contractor]] : [];
+    if (totalPlayers === 5 && partnerKey !== contractor && wonTricks[partnerKey]) {
+        totalAttackCards.push(...wonTricks[partnerKey]);
+    }
+    contractorBoutsCount = totalAttackCards.filter(card => isBout(card)).length;
 
     let pointsRequis = 56; 
     if (contractorBoutsCount === 1) pointsRequis = 51;
     else if (contractorBoutsCount === 2) pointsRequis = 41;
     else if (contractorBoutsCount >= 3) pointsRequis = 36;
 
-    let pointsFaitsAttaque = liveScores[contractor];
-    
-    // Ajout automatique des points cachés du chien pour les contrats avec écart
-    if (currentContract === 'PETITE' || currentContract === 'POUCE' || currentContract === 'GARDE') {
-        chien.forEach(c => { pointsFaitsAttaque += getCardPoints(c); });
-    }
+    let pointsFaitsAttaque = 0;
+    totalAttackCards.forEach(c => { pointsFaitsAttaque += getCardPoints(c); });
 
     let difference = Math.abs(pointsFaitsAttaque - pointsRequis);
     let contratReussi = pointsFaitsAttaque >= pointsRequis;
 
-    // ATTRIBUTION DES POINTS APPLIQUÉE SELON TON BARÈME PERSO (Points de contrat fixes) :
-    let valeurContrat = 20; // Pouce par défaut
-    if (currentContract === 'PETITE') valeurContrat = 10;
-    else if (currentContract === 'POUCE') valeurContrat = 20;
-    else if (currentContract === 'GARDE') valeurContrat = 40;
-    else if (currentContract === 'SANS') valeurContrat = 80;
-    else if (currentContract === 'CONTRE') valeurContrat = 160;
+    let baseContrat = 20; 
+    if (currentContract === 'PETITE') baseContrat = 10;
+    else if (currentContract === 'POUCE') baseContrat = 20;
+    else if (currentContract === 'GARDE') baseContrat = 40;
+    else if (currentContract === 'SANS') baseContrat = 80;
+    else if (currentContract === 'CONTRE') baseContrat = 160;
 
-    // Score total de la donne = Valeur du Contrat fixe + La différence
-    let scoreDonneFinal = valeurContrat + Math.round(difference);
-    let nbDefenseurs = totalPlayers - 1; 
+    let scoreDonneFinal = baseContrat + Math.round(difference);
+    scoreDonneFinal = Math.round(scoreDonneFinal / 10) * 10; 
 
-    if (contratReussi) {
+    if (totalPlayers === 5 && partnerKey !== contractor) {
+        let gainPreneur = scoreDonneFinal * 2;
+        let gainPartenaire = scoreDonneFinal * 1;
+        
         for (let player in cumulativeScores) {
-            if (player === contractor) {
-                cumulativeScores[player] += (scoreDonneFinal * nbDefenseurs);
-            } else if (playerOrder.includes(player)) {
-                cumulativeScores[player] -= scoreDonneFinal;
+            if (!playerOrder.includes(player)) continue;
+            if (contratReussi) {
+                if (player === contractor) cumulativeScores[player] += gainPreneur;
+                else if (player === partnerKey) cumulativeScores[player] += gainPartenaire;
+                else cumulativeScores[player] -= scoreDonneFinal;
+            } else {
+                if (player === contractor) cumulativeScores[player] -= gainPreneur;
+                else if (player === partnerKey) cumulativeScores[player] -= gainPartenaire;
+                else cumulativeScores[player] += scoreDonneFinal;
             }
         }
     } else {
+        let nbDefenseurs = totalPlayers - 1; 
         for (let player in cumulativeScores) {
-            if (player === contractor) {
-                cumulativeScores[player] -= (scoreDonneFinal * nbDefenseurs);
-            } else if (playerOrder.includes(player)) {
-                cumulativeScores[player] += scoreDonneFinal;
+            if (!playerOrder.includes(player)) continue;
+            if (contratReussi) {
+                if (player === contractor) cumulativeScores[player] += (scoreDonneFinal * nbDefenseurs);
+                else cumulativeScores[player] -= scoreDonneFinal;
+            } else {
+                if (player === contractor) cumulativeScores[player] -= (scoreDonneFinal * nbDefenseurs);
+                else cumulativeScores[player] += scoreDonneFinal;
             }
         }
     }
@@ -521,31 +755,44 @@ function endRound() {
     updateCumulativeScoreboard();
 
     const attackerName = contractor === 'human' ? 'Vous' : contractor.toUpperCase();
+    let partnerNameText = "";
+    if (totalPlayers === 5) {
+        const partnerName = partnerKey === 'human' ? 'Vous' : partnerKey.toUpperCase();
+        partnerNameText = partnerKey === contractor ? " (Tout seul !)" : ` (avec l'aide de <strong>${partnerName}</strong>)`;
+    }
+
     const resultatTexte = contratReussi ? "CONTRAT REMPLI" : "CONTRAT CHUTÉ";
     
-    document.getElementById('round-winner-title').innerText = `Manche ${currentRound} terminée — ${resultatTexte}`;
-    document.getElementById('round-summary-text').innerHTML = `
-        L'attaquant (<strong>${attackerName}</strong>) avait besoin de <strong>${pointsRequis} pts</strong>.<br>
-        Il en réalise <strong>${Math.round(pointsFaitsAttaque)} pts</strong> (Différence : ${Math.round(difference)} pts).<br>
-        Marque appliquée (Contrat ${currentContract}) : <strong>${contratReussi ? '+' : '-'}${scoreDonneFinal} pts</strong> par défenseur.
-    `;
+    if (document.getElementById('round-winner-title')) {
+        document.getElementById('round-winner-title').innerText = `Manche ${currentRound} terminée — ${resultatTexte}`;
+    }
+    if (document.getElementById('round-summary-text')) {
+        document.getElementById('round-summary-text').innerHTML = `
+            L'attaquant (<strong>${attackerName}</strong>)${partnerNameText} avait besoin de <strong>${pointsRequis} pts</strong>.<br>
+            L'équipe réalise <strong>${Math.round(pointsFaitsAttaque)} pts</strong>.<br>
+            Valeur nette appliquée (avec arrondi rond) pour ce contrat (${currentContract}) : <strong>${scoreDonneFinal} pts</strong>.
+        `;
+    }
     
-    roundEndPanel.classList.remove('hidden-panel');
+    if (roundEndPanel) roundEndPanel.classList.remove('hidden-panel');
 
-    document.getElementById('next-round-btn').onclick = () => {
-        if (currentRound < maxRounds) {
-            currentRound++;
-            currentDealerIndex = (currentDealerIndex + 1) % playerOrder.length;
-            launchRound();
-        } else {
-            triggerGameOver();
-        }
-    };
+    const nextBtn = document.getElementById('next-round-btn');
+    if (nextBtn) {
+        nextBtn.onclick = () => {
+            if (currentRound < maxRounds) {
+                currentRound++;
+                currentDealerIndex = (currentDealerIndex + 1) % playerOrder.length;
+                launchRound();
+            } else {
+                triggerGameOver();
+            }
+        };
+    }
 }
 
 function triggerGameOver() {
-    roundEndPanel.classList.add('hidden-panel');
-    gameOverPanel.classList.remove('hidden-panel');
+    if (roundEndPanel) roundEndPanel.classList.add('hidden-panel');
+    if (gameOverPanel) gameOverPanel.classList.remove('hidden-panel');
 
     let grandWinner = 'human';
     let maxCum = cumulativeScores.human;
@@ -554,11 +801,13 @@ function triggerGameOver() {
     }
 
     const finalWinner = grandWinner === 'human' ? 'Félicitations, vous gagnez la table !' : `Le vainqueur final est le ${grandWinner.toUpperCase()} !`;
-    document.getElementById('game-winner-title').innerText = `${finalWinner}`;
+    if (document.getElementById('game-winner-title')) {
+        document.getElementById('game-winner-title').innerText = `${finalWinner}`;
+    }
 }
 
 function resetAllAndRestart() {
-    gameOverPanel.classList.add('hidden-panel');
-    gameBoard.classList.add('hidden');
-    setupScreen.classList.remove('hidden');
+    if (gameOverPanel) gameOverPanel.classList.add('hidden-panel');
+    if (gameBoard) gameBoard.classList.add('hidden');
+    if (setupScreen) setupScreen.classList.remove('hidden');
 }
