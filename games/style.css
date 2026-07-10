@@ -1,0 +1,569 @@
+/* ==========================================================================
+   RESET & STRUCTURE GENERALE
+   ========================================================================== */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    background: #0d1117;
+    margin: 0;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    color: #f5f6fa;
+    overflow-x: hidden;
+}
+
+.game-header { 
+    background: #161d26; 
+    padding: 12px 20px; 
+    border-bottom: 2px solid #23303f; 
+}
+
+.game-nav { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+}
+
+.back-home { 
+    color: #a4b0be; 
+    text-decoration: none; 
+    font-weight: 500; 
+    transition: color 0.2s;
+}
+
+.back-home:hover { 
+    color: #fbc531; 
+}
+
+.game-title { 
+    font-weight: bold; 
+    font-size: 18px; 
+    color: #fbc531; 
+}
+
+#tarot-container { 
+    max-width: 1400px; 
+    margin: 15px auto; 
+    padding: 0 15px; 
+}
+
+/* ==========================================================================
+   ECRAN DE CONFIGURATION (SETUP)
+   ========================================================================== */
+.setup-box {
+    background: linear-gradient(145deg, #1e272e, #161d24);
+    padding: 40px; 
+    border-radius: 16px; 
+    max-width: 450px; 
+    margin: 60px auto; 
+    text-align: center;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.6); 
+    border: 1px solid rgba(255,255,255,0.08);
+}
+
+.setup-box h2 { 
+    color: #fbc531; 
+    margin-top: 0;
+    margin-bottom: 5px; 
+}
+
+.setup-box .subtitle { 
+    color: #a4b0be; 
+    margin-bottom: 30px; 
+    font-size: 14px; 
+}
+
+.form-group { 
+    margin-bottom: 24px; 
+    text-align: left; 
+}
+
+.form-group label { 
+    display: block; 
+    margin-bottom: 8px; 
+    color: #a4b0be; 
+    font-size: 14px;
+}
+
+.form-group select { 
+    width: 100%; 
+    padding: 12px; 
+    border-radius: 8px; 
+    border: 1px solid #2f3640; 
+    background: #2f3542; 
+    color: white; 
+    font-size: 15px;
+    outline: none;
+}
+
+.btn-main { 
+    background: #e1b12c; 
+    color: #1e272e; 
+    border: none; 
+    padding: 14px 35px; 
+    font-size: 16px; 
+    font-weight: bold; 
+    border-radius: 30px; 
+    cursor: pointer; 
+    transition: all 0.2s; 
+}
+
+.btn-main:hover { 
+    background: #fbc531; 
+    transform: scale(1.03); 
+}
+
+.btn-main:disabled { 
+    background: #718093; 
+    color: #dcdde1;
+    cursor: not-allowed; 
+    transform: none;
+}
+
+/* ==========================================================================
+   BARRE D'INFOS PERMANENTE
+   ========================================================================== */
+.info-bar { 
+    display: flex; 
+    gap: 30px; 
+    background: #161d26; 
+    padding: 12px 20px; 
+    border-radius: 8px; 
+    margin-bottom: 15px; 
+    font-size: 14px; 
+    border: 1px solid #23303f;
+}
+
+.info-bar .label { 
+    color: #a4b0be; 
+}
+
+.badge { 
+    background: #e1b12c; 
+    color: #1e272e; 
+    padding: 2px 10px; 
+    border-radius: 4px; 
+    font-weight: bold; 
+    text-transform: uppercase;
+}
+
+/* ==========================================================================
+   AGENCEMENT DU JEU (TABLE + SIDEBAR)
+   ========================================================================== */
+.game-layout {
+    display: flex;
+    gap: 20px;
+    height: 750px;
+}
+
+/* LE TAPIS DE TAROT DE SURFACE */
+.table-surface {
+    flex: 1;
+    background: radial-gradient(circle, #11622e 0%, #052910 100%);
+    border: 14px solid #3d2411; 
+    border-radius: 40px; 
+    height: 100%; 
+    position: relative;
+    box-shadow: inset 0 0 80px rgba(0,0,0,0.9), 0 10px 25px rgba(0,0,0,0.5); 
+    overflow: hidden;
+}
+
+/* ==========================================================================
+   TABLEAU DES SCORES (SIDEBAR DROITE)
+   ========================================================================== */
+.score-sidebar {
+    width: 280px;
+    background: #161d26;
+    border-radius: 18px;
+    border: 2px solid #23303f;
+    padding: 20px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+}
+
+.sidebar-header {
+    font-size: 18px;
+    font-weight: bold;
+    color: #fbc531;
+    border-bottom: 2px solid #23303f;
+    padding-bottom: 10px;
+    text-align: center;
+}
+
+.score-section h4 {
+    margin: 0 0 12px 0;
+    font-size: 13px;
+    color: #a4b0be;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+}
+
+/* Encadré Attaque vs Défense */
+.highlight-box {
+    background: rgba(255, 255, 255, 0.03);
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(233, 177, 44, 0.25);
+}
+
+.team-points {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.team-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-weight: 600;
+}
+.team-row.attack { 
+    background: rgba(225, 177, 44, 0.15); 
+    color: #fbc531; 
+    border-left: 4px solid #e1b12c; 
+}
+.team-row.defense { 
+    background: rgba(52, 152, 219, 0.15); 
+    color: #3498db; 
+    border-left: 4px solid #3498db; 
+}
+
+/* Points individuels live */
+.point-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    font-size: 14px;
+}
+
+/* Tableau scores cumulés */
+.score-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.score-table th, .score-table td {
+    padding: 8px 4px;
+    text-align: left;
+}
+
+.score-table th {
+    border-bottom: 2px solid #23303f;
+    color: #a4b0be;
+    font-weight: 500;
+}
+
+.score-table td {
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.total-score {
+    font-weight: bold;
+    color: #fbc531;
+}
+
+/* ==========================================================================
+   PANNEAUX INTERACTIFS ET POPUPS CENTRALES
+   ========================================================================== */
+.hidden-panel { 
+    display: none !important; 
+}
+
+#bidding-panel, #chien-discard-panel, #round-end-panel, #game-over-panel {
+    position: absolute; 
+    top: 50%; 
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80%; 
+    max-width: 500px;
+    background: rgba(15, 22, 30, 0.96);
+    border: 2px solid #e1b12c; 
+    border-radius: 20px; 
+    padding: 30px; 
+    text-align: center; 
+    z-index: 100;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+    backdrop-filter: blur(4px);
+}
+
+#bidding-panel h3, #chien-discard-panel h3, #round-end-panel h3 {
+    margin-top: 0;
+    color: #fbc531;
+}
+
+.bidding-buttons { 
+    display: flex; 
+    gap: 12px; 
+    justify-content: center; 
+    flex-wrap: wrap; 
+    margin-top: 20px; 
+}
+
+.btn-bid {
+    background: #2f3542; 
+    color: white; 
+    border: 1px solid #e1b12c; 
+    padding: 10px 18px;
+    border-radius: 8px; 
+    cursor: pointer; 
+    font-weight: 600; 
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.btn-bid:hover { 
+    background: #e1b12c; 
+    color: #1e272e; 
+    transform: translateY(-2px);
+}
+
+/* ==========================================================================
+   AVATARS ET PLACEMENT DES ROBOTS (AUTOUR DE LA TABLE)
+   ========================================================================== */
+.player-slot { 
+    position: absolute; 
+    background: rgba(10, 15, 23, 0.9); 
+    padding: 8px 16px; 
+    border-radius: 50px; 
+    display: flex; 
+    align-items: center; 
+    gap: 12px; 
+    border: 1.5px solid #e1b12c; 
+    box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+}
+
+.player-slot .avatar {
+    font-size: 20px;
+}
+
+.player-slot .bot-info {
+    font-size: 13px;
+}
+
+/* Positionnement circulaire équilibré */
+#slot-bot1 { top: 35%; left: 3%; }
+#slot-bot2 { top: 4%; left: 42%; }
+#slot-bot3 { top: 35%; right: 3%; }
+#slot-bot4 { top: 60%; right: 3%; } /* Pour le mode 5 joueurs */
+
+/* ==========================================================================
+   ZONE DU CENTRE DE TABLE (CHIEN + ZONE DE JEU)
+   ========================================================================== */
+.table-center { 
+    position: absolute; 
+    top: 22%; 
+    left: 12%; 
+    width: 76%; 
+    height: 40%; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    gap: 40px;
+}
+
+#chien-box { 
+    background: rgba(0,0,0,0.35); 
+    border: 2px dashed rgba(255,255,255,0.2); 
+    border-radius: 14px; 
+    width: 180px; 
+    height: 150px; 
+    padding: 8px; 
+    text-align: center; 
+}
+
+.chien-header { 
+    font-size: 11px; 
+    color: #e1b12c; 
+    font-weight: bold; 
+    margin-bottom: 8px; 
+    letter-spacing: 1px;
+}
+
+#chien-cards-zone { 
+    display: flex; 
+    gap: 4px; 
+    justify-content: center; 
+}
+
+/* Zone d'affichage du pli en cours */
+.played-cards-container { 
+    background: rgba(0,0,0,0.45); 
+    border-radius: 16px; 
+    padding: 12px; 
+    width: 380px; 
+    height: 170px; 
+    border: 1px solid rgba(255,255,255,0.05);
+    box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
+}
+
+.played-header { 
+    font-size: 12px; 
+    color: #e1b12c; 
+    font-weight: bold; 
+    margin-bottom: 8px; 
+    text-align: center;
+    border-bottom: 1px solid rgba(255,255,255,0.1); 
+    padding-bottom: 4px;
+}
+
+#played-cards-zone { 
+    display: flex; 
+    gap: 12px; 
+    justify-content: center; 
+    align-items: center; 
+    height: 80%; 
+}
+
+/* ==========================================================================
+   DESIGN VISUEL DES CARTES DE TAROT
+   ========================================================================== */
+.card {
+    width: 65px; 
+    height: 110px; 
+    border-radius: 8px; 
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    display: flex; 
+    flex-direction: column; 
+    justify-content: space-between; 
+    padding: 6px;
+    position: relative; 
+    cursor: pointer; 
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s, border-color 0.2s; 
+    border: 1.5px solid rgba(255, 255, 255, 0.25);
+    user-select: none;
+}
+
+/* Couleurs thématiques des familles du Tarot */
+.card.atout { 
+    background: linear-gradient(135deg, #1b3a4b, #0a192f); 
+    color: #f1c40f; 
+    border-color: #f1c40f; 
+}
+.card.coeur, .card.carreau { 
+    background: linear-gradient(135deg, #bdc581, #7f0000); /* Dégradé rouge profond */
+    background: linear-gradient(135deg, #c0392b, #7f0d04);
+    color: #ffffff; 
+    border-color: #ff7675; 
+}
+.card.trefle, .card.pique { 
+    background: linear-gradient(135deg, #2d3436, #14191f); 
+    color: #ffffff; 
+    border-color: #b2bec3; 
+}
+.card.excuse { 
+    background: linear-gradient(135deg, #6c5ce7, #322375); 
+    color: #fff; 
+    border-color: #f1c40f; 
+}
+
+/* Dos de carte (Chien / Cache) */
+.card.back { 
+    background: linear-gradient(135deg, #2c3e50, #0f171e) !important; 
+    color: transparent !important; 
+    border-color: #ffffff; 
+    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+}
+
+/* Animation et style de sélection pour l'écart */
+.card.selected-discard {
+    transform: translateY(-20px) !important;
+    border: 3px solid #fbc531 !important;
+    box-shadow: 0 0 20px #fbc531;
+}
+
+/* Contenu textuel et symbolique de la carte */
+.card .top-left { 
+    font-size: 14px; 
+    font-weight: bold; 
+    line-height: 1;
+}
+
+.card .symbol-center { 
+    font-size: 26px; 
+    align-self: center; 
+    margin-bottom: 5px;
+}
+
+.card .bottom-right { 
+    font-size: 14px; 
+    font-weight: bold; 
+    align-self: flex-end; 
+    transform: rotate(180deg); 
+    line-height: 1;
+}
+
+/* ==========================================================================
+   MAIN DU JOUEUR HUMAIN (BAS DE L'ÉCRAN)
+   ========================================================================== */
+.player-human-zone {
+    position: absolute; 
+    bottom: 0; 
+    left: 0; 
+    width: 100%;
+    background: rgba(10, 15, 23, 0.92); 
+    border-top: 3px solid #e1b12c;
+    padding: 12px 30px; 
+    z-index: 10;
+    box-shadow: 0 -5px 25px rgba(0,0,0,0.6);
+}
+
+.human-header { 
+    font-size: 13px; 
+    color: #e1b12c; 
+    margin-bottom: 6px; 
+    font-weight: 600; 
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.hand-cards {
+    display: flex; 
+    justify-content: center;
+    gap: 6px; 
+    overflow-x: auto; 
+    padding: 8px 10px 15px 10px;
+    max-width: 100%;
+}
+
+.hand-cards .card { 
+    flex-shrink: 0; 
+}
+
+/* Effet de survol des cartes dans notre main */
+.hand-cards .card:hover { 
+    transform: translateY(-25px) scale(1.08); 
+    z-index: 99; 
+    box-shadow: 0 10px 20px rgba(0,0,0,0.7);
+}
+
+/* ==========================================================================
+   UTILITAIRES DE DISTRIBUTION & ETATS
+   ========================================================================== */
+.hidden { 
+    display: none !important; 
+}
+
+@keyframes dealCard {
+    from {
+        transform: translateY(-200px) scale(0.3);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+}
+
+.animated-deal {
+    animation: dealCard 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.15) backwards;
+}
