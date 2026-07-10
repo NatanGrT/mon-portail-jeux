@@ -3,89 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Exo-Clicker Evolution</title>
+    <title>Production Clicker Pro</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Container des événements aléatoires -->
     <div id="event-container"></div>
 
     <div class="game-layouts">
-        <!-- Sidebar Gauche : STATS & PRESTIGE -->
+        <!-- Gauche -->
         <div class="panel sidebar-left">
             <a href="../../index.html" class="back-link">← Retour au Hub</a>
-            <h2>Statistiques</h2>
+            <h2>📊 Évolution</h2>
             <div class="stat-card">
-                <p>Multiplicateur global : <span id="global-mult" class="highlight">100</span>%</p>
-                <p>Niveau de Prestige : <span id="prestige-level" class="highlight">0</span></p>
-                <p>Gemmes possédées : <span id="prestige-gems" class="highlight-gem">0</span> 💎</p>
+                <p>Bonus global : <span id="global-mult" class="highlight">100</span>%</p>
+                <p>Niveau Prestige : <span id="prestige-level" class="highlight">0</span></p>
+                <p>Gemmes accumulées : <span id="prestige-gems" class="highlight-gem">0</span> 💎</p>
             </div>
 
-            <h2>Boutique de Prestige</h2>
+            <h2>✨ Améliorations Éternelles</h2>
             <div class="prestige-shop">
                 <div class="prestige-item">
-                    <button id="upgrade-click" class="p-btn" disabled>Surcharge Clic (Prix: 1 💎)</button>
-                    <small>+1 point par clic de base</small>
+                    <button id="upgrade-click" class="p-btn" disabled>Surcharge Clic</button>
+                    <small>Augmente la puissance de chaque clic</small>
                 </div>
                 <div class="prestige-item">
-                    <button id="upgrade-discount" class="p-btn" disabled>Optimisation (Prix: 2 💎)</button>
-                    <small>Réduit le coût des bâtiments de 10%</small>
+                    <button id="upgrade-discount" class="p-btn" disabled>Optimisation des Coûts</button>
+                    <small>Réduit le coût global de la boutique de 10%</small>
                 </div>
             </div>
 
             <div class="reload-zone">
-                <button id="prestige-btn" class="prestige-main-btn" disabled>RELOAD (PRESTIGE)</button>
+                <button id="prestige-btn" class="prestige-main-btn" disabled>RELOAD & RENAÎTRE</button>
                 <p id="objective-text">Requis : <span id="req-score">1,000</span> points</p>
             </div>
         </div>
 
-        <!-- Centre : LE GROS BOUTON -->
+        <!-- Centre -->
         <div class="panel center-zone">
             <div class="score-container">
                 <h1 id="score-display">0</h1>
-                <p>+<span id="bps-display">0</span> par seconde</p>
+                <p style="color: var(--text-muted); margin: 4px 0 0 0;">+<span id="bps-display" style="color: var(--accent); font-weight: 600;">0</span> / seconde</p>
             </div>
             
             <div class="clicker-wrapper">
                 <button id="click-me"></button>
             </div>
             
-            <div id="active-event-alert" class="hidden">⚠️ ANOMALIE ACTIVE : PRODUCTION MULTIPLIÉE !</div>
+            <div id="active-event-alert" class="hidden">⚡ REVENUE BOOSTÉ (x3) PAR L'ANOMALIE !</div>
         </div>
 
-        <!-- Sidebar Droite : BOUTIQUE AUTOMATIQUE -->
+        <!-- Droite -->
         <div class="panel sidebar-right">
-            <h2>Auto-Mineurs</h2>
+            <h2>🛠️ Unités de Production</h2>
             <div class="shop-list">
-                <!-- Fermier -->
                 <div class="shop-card">
                     <div class="shop-info">
-                        <h3>Drone Récolteur</h3>
-                        <p>Production : +1/s | Qté: <span id="count-1">0</span></p>
+                        <h3>Drone Extracteur</h3>
+                        <p>+1/s • Qté: <span id="count-1">0</span></p>
                     </div>
                     <button id="buy-1" class="buy-btn">Coût: <span id="cost-1">15</span></button>
                 </div>
-                <!-- Tracteur -->
                 <div class="shop-card">
                     <div class="shop-info">
-                        <h3>Foreuse Thermique</h3>
-                        <p>Production : +8/s | Qté: <span id="count-2">0</span></p>
+                        <h3>Module de Forage</h3>
+                        <p>+8/s • Qté: <span id="count-2">0</span></p>
                     </div>
                     <button id="buy-2" class="buy-btn">Coût: <span id="cost-2">100</span></button>
                 </div>
-                <!-- NOUVEAU 1 -->
                 <div class="shop-card">
                     <div class="shop-info">
-                        <h3>Synthetiseur Quantique</h3>
-                        <p>Production : +50/s | Qté: <span id="count-3">0</span></p>
+                        <h3>Usine Quantique</h3>
+                        <p>+50/s • Qté: <span id="count-3">0</span></p>
                     </div>
                     <button id="buy-3" class="buy-btn">Coût: <span id="cost-3">1,100</span></button>
                 </div>
-                <!-- NOUVEAU 2 -->
                 <div class="shop-card">
                     <div class="shop-info">
-                        <h3>Extracteur Stellaire</h3>
-                        <p>Production : +400/s | Qté: <span id="count-4">0</span></p>
+                        <h3>Réacteur Stellaire</h3>
+                        <p>+400/s • Qté: <span id="count-4">0</span></p>
                     </div>
                     <button id="buy-4" class="buy-btn">Coût: <span id="cost-4">12,000</span></button>
                 </div>
