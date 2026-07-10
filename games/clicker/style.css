@@ -10,6 +10,11 @@
     --text-muted: #64748b;
 }
 
+/* Force tous les éléments à calculer correctement leur taille */
+* {
+    box-sizing: border-box;
+}
+
 body {
     background-color: var(--bg-main);
     color: var(--text);
@@ -27,10 +32,12 @@ body {
     display: grid;
     grid-template-columns: 340px 1fr 380px;
     width: 96vw;
-    height: 92vh;
+    height: 90vh;
+    max-height: 90vh;
     gap: 24px;
 }
 
+/* Panneaux avec défilement interne automatique pour éviter les blocages */
 .panel {
     background: var(--panel-bg);
     border: 1px solid var(--panel-border);
@@ -40,11 +47,11 @@ body {
     flex-direction: column;
     box-shadow: 0 20px 40px rgba(0,0,0,0.4);
     backdrop-filter: blur(12px);
-    
-    /* LES DEUX LIGNES MAGIQUES ICI : */
+    height: 100%;
     max-height: 100%;
-    overflow-y: auto; 
+    overflow-y: auto;
 }
+
 h2 {
     font-size: 1.1rem;
     font-weight: 700;
@@ -55,6 +62,7 @@ h2 {
     display: flex;
     align-items: center;
     gap: 8px;
+    flex-shrink: 0; /* Empêche le titre de se déformer */
 }
 
 /* --- COLONNE CENTRALE : LE GROS BOUTON --- */
@@ -177,6 +185,7 @@ h2 {
     border-radius: 16px;
     margin-bottom: 20px;
     border: 1px solid rgba(255,255,255,0.02);
+    flex-shrink: 0;
 }
 
 .stat-card p { margin: 6px 0; font-size: 0.9rem; color: var(--text-muted); }
@@ -187,6 +196,7 @@ h2 {
     display: flex;
     flex-direction: column;
     gap: 12px;
+    margin-bottom: 20px;
 }
 
 .prestige-item small {
@@ -221,6 +231,7 @@ h2 {
     padding: 16px;
     border-radius: 16px;
     text-align: center;
+    flex-shrink: 0; /* Garde la zone intacte en bas de colonne */
 }
 
 #objective-text { margin: 8px 0 0 0; font-size: 0.85rem; color: var(--text-muted); }
