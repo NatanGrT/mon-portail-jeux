@@ -1,127 +1,217 @@
-// --- ÉTAT DU JEU ---
-let score = 0;
-let totalScoreEarned = 0; // Sert à savoir si on a atteint l'objectif pour le Reload
+// --- CONFIGURATION ET ÉTAT DU JEU ---
+let state = {
+    score: 0,
+    totalScoreThisLoop: 0,
+    baseObjective: 1000,
+    difficultyMultiplier: 1.5, // Augmente la difficulté de 50% par prestige
+    
+    // Prestige
+    prestigeLevel: 0,
+    gems: 0,
+    clickUpgradeLevel: 0,
+    discountUpgradeLevel: 0,
 
-// Améliorations
-let farmers = 0;
-let farmerCost = 15;
-let tractors = 0;
-let tractorCost = 100;
+    // Auto-Mineurs (Id, BaseCost, BaseBps, Count, CurrentCost)
+    miners: [
+        { id: 1, baseCost: 15, bps: 1, count: 0, cost: 15 },
+        { id: 2, baseCost: 100, bps: 8, count: 0, cost: 100 },
+        { id: 3, baseCost: 1100, bps: 50, count: 0, cost: 1100 },
+        { id: 4, baseCost: 12000, bps: 400, count: 0, cost: 12000 }
+    ]
+};
 
-// Système de Reload (Prestige)
-let renaissances = 0;
-let prestigeMultiplier = 1; // 1 = 100% des gains de base
+let eventActiveMultiplier = 1;
 
-// --- ÉLÉMENTS DU DOM ---
-const scoreDisplay = document.getElementById('score');
-const bpsDisplay = document.getElementById('bps');
-const prestigeDisplay = document.getElementById('prestige-bonus');
-const button = document.getElementById('click-me');
-
-const buyFarmerBtn = document.getElementById('buy-farmer');
-const farmerCostDisplay = document.getElementById('farmer-cost');
-const farmerCountDisplay = document.getElementById('farmer-count');
-
-const buyTractorBtn = document.getElementById('buy-tractor');
-const tractorCostDisplay = document.getElementById('tractor-cost');
-const tractorCountDisplay = document.getElementById('tractor-count');
-
-const prestigeBtn = document.getElementById('prestige-btn');
-
-// --- FONCTIONS DE MISE À JOUR ---
-
-function calculateBPS() {
-    // Les fermiers donnent 1/s, les tracteurs donnent 8/s, le tout boosté par le prestige
-    let baseProduction = (farmers * 1) + (tractors * 8);
-    return baseProduction * prestigeMultiplier;
+// --- DÉDUCTION DES VARIABLES CALCULÉES ---
+function getObjectiveNeeded() {
+    return Math.floor(state.baseObjective * Math.pow(state.difficultyMultiplier, state.prestigeLevel));
 }
 
+function getClickPower() {
+    return (1 + state.clickUpgradeLevel) * (1 + state.prestigeLevel * 0.15);
+}
+
+function getGlobalMultiplier() {
+    return (1 + state.prestigeLevel * 0.15); // +15% de bonus passif par niveau de prestige
+}
+
+function getDiscount() {
+    return Math.pow(0.90, state.discountUpgradeLevel); // -10% composé par niveau d'achat
+}
+
+function calculateTotalBPS() {
+    let totalBase = state.miners.reduce((sum, m) => sum + (m.count * m.bps), 0);
+    return totalBase * getGlobalMultiplier() * eventActiveMultiplier;
+}
+
+// --- SYSTÈME D'ÉVÉNEMENTS POP-UP (ANTI-AFK) ---
+function spawnRandomEvent() {
+    // N'apparaît que si le joueur a déjà fait au moins un reload ou a atteint 300 points
+    if(state.prestigeLevel === 0 && state.totalScoreThisLoop < 300) return;
+
+    const container = document.getElementById('event-container');
+    const eventEl = document.createElement('div');
+    eventEl.className = 'random-anomaly';
+    
+    // Position aléatoire sur l'écran
+    const x = Math.random() * (window.innerWidth - 100);
+    const y = Math.random() * (window.innerHeight - 100);
+    eventEl.style.left = `${x}px`;
+    eventEl.style.top = `${y}px`;
+    eventEl.innerText = "⚡ ANOMALIE ⚡";
+
+    // Durée de vie du pop-up : 6 secondes pour cliquer dessus
+    let timeout = setTimeout(() => { eventEl.remove(); }, 6000);
+
+    eventEl.addEventListener('click', () => {
+        clearTimeout(timeout);
+        eventEl.remove();
+        triggerBonusPeriod();
+    });
+
+    container.appendChild(eventEl);
+}
+
+function triggerBonusPeriod() {
+    eventActiveMultiplier = 3; // Production x3 !
+    document.getElementById('active-event-alert').classList.remove('hidden');
+    
+    setTimeout(() => {
+        eventActiveMultiplier = 1;
+        document.getElementById('active-event-alert').classList.add('hidden');
+        updateUI();
+    }, 10000); // Dure 10 secondes
+}
+
+// Déclenche une chance d'événement toutes les 25 secondes
+setInterval(() => {
+    if(Math.random() < 0.4) spawnRandomEvent(); // 40% de chance d'apparition
+}, 25000);
+
+
+// --- MISE À JOUR DE L'INTERFACE UI ---
 function updateUI() {
-    // Affichage des scores (Math.floor évite les nombres à virgule bizarres)
-    scoreDisplay.innerText = Math.floor(score);
-    bpsDisplay.innerText = calculateBPS().toFixed(1);
-    prestigeDisplay.innerText = Math.floor((prestigeMultiplier - 1) * 100);
+    const objective = getObjectiveNeeded();
+    
+    document.getElementById('score-display').innerText = Math.floor(state.score).toLocaleString();
+    document.getElementById('bps-display').innerText = calculateTotalBPS().toFixed(1);
+    document.getElementById('global-mult').innerText = Math.floor(getGlobalMultiplier() * 100);
+    document.getElementById('prestige-level').innerText = state.prestigeLevel;
+    document.getElementById('prestige-gems').innerText = state.gems;
+    document.getElementById('req-score').innerText = objective.toLocaleString();
 
-    // Boutique Fermier
-    farmerCostDisplay.innerText = Math.floor(farmerCost);
-    farmerCountDisplay.innerText = farmers;
-    buyFarmerBtn.disabled = score < farmerCost;
+    // Boutons des Auto-Mineurs
+    state.miners.forEach(m => {
+        m.cost = Math.floor(m.baseCost * Math.pow(1.15, m.count) * getDiscount());
+        document.getElementById(`cost-${m.id}`).innerText = m.cost.toLocaleString();
+        document.getElementById(`count-${m.id}`).innerText = m.count;
+        
+        const btn = document.getElementById(`buy-${m.id}`);
+        btn.disabled = state.score < m.cost;
+    });
 
-    // Boutique Tracteur
-    tractorCostDisplay.innerText = Math.floor(tractorCost);
-    tractorCountDisplay.innerText = tractors;
-    buyTractorBtn.disabled = score < tractorCost;
-
-    // Bouton de Reload (débloqué à partir de 1000 clics au total)
-    if (totalScoreEarned >= 1000) {
+    // Bouton de Prestige principal
+    const prestigeBtn = document.getElementById('prestige-btn');
+    if (state.totalScoreThisLoop >= objective) {
         prestigeBtn.disabled = false;
+        prestigeBtn.classList.add('ready');
     } else {
         prestigeBtn.disabled = true;
+        prestigeBtn.classList.remove('ready');
     }
+
+    // Boutons de la boutique Prestige
+    const clickUpgradeCost = Math.floor(1 * Math.pow(2, state.clickUpgradeLevel));
+    const discountUpgradeCost = Math.floor(2 * Math.pow(2.5, state.discountUpgradeLevel));
+
+    const clickBtn = document.getElementById('upgrade-click');
+    clickBtn.innerText = `Surcharge Clic (Prix: ${clickUpgradeCost} 💎)`;
+    clickBtn.disabled = state.gems < clickUpgradeCost;
+
+    const discBtn = document.getElementById('upgrade-discount');
+    discBtn.innerText = `Optimisation (Prix: ${discountUpgradeCost} 💎)`;
+    discBtn.disabled = state.gems < discountUpgradeCost;
 }
 
-// --- ÉVÉNEMENTS (CLICS) ---
+// --- BOUTONS INTERACTIONS ---
 
-// Clic sur le gros bouton
-button.addEventListener('click', () => {
-    let gained = 1 * prestigeMultiplier;
-    score += gained;
-    totalScoreEarned += gained;
-    updateUI();
+// Le Clic principal
+document.getElementById('click-me').addEventListener('click', (e) => {
+    let earned = getClickPower() * eventActiveMultiplier;
+    state.score += earned;
+    state.totalScoreThisLoop += earned;
     
-    // Petit clin d'œil à ton code d'origine !
-    if(Math.floor(score) === 10) {
-        alert("Pas mal ! Continue !");
-    }
+    // Création d'un petit chiffre volant au clic
+    createFloatingText(e.clientX, e.clientY, `+${Math.floor(earned)}`);
+    updateUI();
 });
 
-// Achat Fermier
-buyFarmerBtn.addEventListener('click', () => {
-    if (score >= farmerCost) {
-        score -= farmerCost;
-        farmers++;
-        farmerCost *= 1.15; // Augmente le prix de 15%
-        updateUI();
-    }
-});
+function createFloatingText(x, y, text) {
+    const txt = document.createElement('div');
+    txt.className = 'floating-text';
+    txt.style.left = `${x}px`;
+    txt.style.top = `${y}px`;
+    txt.innerText = text;
+    document.body.appendChild(txt);
+    setTimeout(() => txt.remove(), 800);
+}
 
-// Achat Tracteur
-buyTractorBtn.addEventListener('click', () => {
-    if (score >= tractorCost) {
-        score -= tractorCost;
-        tractors++;
-        tractorCost *= 1.15; // Augmente le prix de 15%
-        updateUI();
-    }
-});
-
-// Système de RELOAD
-prestigeBtn.addEventListener('click', () => {
-    if (totalScoreEarned >= 1000) {
-        if (confirm("Voulez-vous sacrifier votre ferme actuelle pour faire un Reload et obtenir +10% de bonus permanent ?")) {
-            renaissances++;
-            prestigeMultiplier = 1 + (renaissances * 0.10); // +10% par reload
-
-            // Remise à zéro de la boucle actuelle
-            score = 0;
-            totalScoreEarned = 0;
-            farmers = 0;
-            farmerCost = 15;
-            tractors = 0;
-            tractorCost = 100;
-
+// Achats d'auto-mineurs
+state.miners.forEach(m => {
+    document.getElementById(`buy-${m.id}`).addEventListener('click', () => {
+        if (state.score >= m.cost) {
+            state.score -= m.cost;
+            m.count++;
             updateUI();
         }
+    });
+});
+
+// Achat d'Upgrades Prestige
+document.getElementById('upgrade-click').addEventListener('click', () => {
+    const cost = Math.floor(1 * Math.pow(2, state.clickUpgradeLevel));
+    if(state.gems >= cost) {
+        state.gems -= cost;
+        state.clickUpgradeLevel++;
+        updateUI();
     }
 });
 
-// --- BOUCLE DE JEU (S'exécute toutes les 100ms) ---
+document.getElementById('upgrade-discount').addEventListener('click', () => {
+    const cost = Math.floor(2 * Math.pow(2.5, state.discountUpgradeLevel));
+    if(state.gems >= cost) {
+        state.gems -= cost;
+        state.discountUpgradeLevel++;
+        updateUI();
+    }
+});
+
+// Action du RELOAD (Prestige)
+document.getElementById('prestige-btn').addEventListener('click', () => {
+    const objective = getObjectiveNeeded();
+    if (state.totalScoreThisLoop >= objective) {
+        // Formule de gain de gemmes basée sur le surplus produit
+        let earnedGems = 1 + Math.floor((state.totalScoreThisLoop - objective) / (objective * 0.5));
+        
+        state.gems += earnedGems;
+        state.prestigeLevel++;
+        
+        // Reset de la boucle
+        state.score = 0;
+        state.totalScoreThisLoop = 0;
+        state.miners.forEach(m => m.count = 0);
+        
+        updateUI();
+    }
+});
+
+// --- ENGIN DE TEMPS (Tick toutes les 100ms) ---
 setInterval(() => {
-    let bps = calculateBPS();
-    if (bps > 0) {
-        let gained = bps / 10; // On divise par 10 car la boucle tourne 10 fois par seconde
-        score += gained;
-        totalScoreEarned += gained;
+    let bps = calculateTotalBPS();
+    if(bps > 0) {
+        let chunk = bps / 10;
+        state.score += chunk;
+        state.totalScoreThisLoop += chunk;
         updateUI();
     }
 }, 100);
