@@ -45,7 +45,7 @@ function loadGame() {
 }
 
 // Sauvegarde automatique en arrière-plan (Toutes les 10 secondes)
-setInterval(saveGame, 10000);
+setInterval(saveGame, 1000);
 
 
 // --- FORMULES MATHÉMATIQUES DU JEU ---
