@@ -10,7 +10,6 @@
     <div id="event-container"></div>
 
     <div class="game-layouts">
-        <!-- Gauche -->
         <div class="panel sidebar-left">
             <a href="../../index.html" class="back-link">← Retour au Hub</a>
             <h2>📊 Évolution</h2>
@@ -30,6 +29,15 @@
                     <button id="upgrade-discount" class="p-btn" disabled>Optimisation des Coûts</button>
                     <small>Réduit le coût global de la boutique de 10%</small>
                 </div>
+                
+                <div class="prestige-item">
+                    <button id="upgrade-events" class="p-btn" disabled>Détecteur d'Anomalies</button>
+                    <small>Débloque l'apparition d'événements aléatoires (Boost x3 / Pluie de points)</small>
+                </div>
+                <div class="prestige-item">
+                    <button id="upgrade-rift" class="p-btn" disabled>Radar de Failles</button>
+                    <small>Permet l'apparition rare de Failles qui offrent des Gemmes gratuites</small>
+                </div>
             </div>
 
             <div class="reload-zone">
@@ -38,7 +46,6 @@
             </div>
         </div>
 
-        <!-- Centre -->
         <div class="panel center-zone">
             <div class="score-container">
                 <h1 id="score-display">0</h1>
@@ -49,10 +56,9 @@
                 <button id="click-me"></button>
             </div>
             
-            <div id="active-event-alert" class="hidden">⚡ REVENUE BOOSTÉ (x3) PAR L'ANOMALIE !</div>
+            <div id="active-event-alert" class="hidden">⚡ EVENT ACTIVE !</div>
         </div>
 
-        <!-- Droite -->
         <div class="panel sidebar-right">
             <h2>🛠️ Unités de Production</h2>
             <div class="shop-list">
